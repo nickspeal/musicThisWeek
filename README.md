@@ -22,9 +22,9 @@ A whole bunch of dependencies in packages.json. Type `npm install` to install th
 
 2. run `python eventFinder.py` to get a list of local events
 
-3. run `node.js app.js` to run server. Keep it going
+3. run `node app.js` to run the server. Keep it going
 
-4. run `python eneratePlaylist.py` 
+4. run `python generatePlaylist.py` 
 
 5. A web browser will pop up. Log into Spotify and then close the browser.
 
