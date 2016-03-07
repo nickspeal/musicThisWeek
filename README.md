@@ -12,6 +12,24 @@ generatePlaylist.py: Creates a spotify playlist based on a list of artists. (Not
 
 requests (2.9.1)
 
+Node.js
+
+A whole bunch of dependencies in packages.json. Type `npm install` to install them.
+
+# Instructions
+
+1. Install dependencies
+
+2. run `python eventFinder.py` to get a list of local events
+
+3. run `node.js app.js` to run server. Keep it going
+
+4. run `python eneratePlaylist.py` 
+
+5. A web browser will pop up. Log into Spotify and then close the browser.
+
+6. The python program will attempt to create a spotify playlist (But fail as of now, due to auth issues)
+
 ## Status
 
 In early development. Building up the components one block at a time.
