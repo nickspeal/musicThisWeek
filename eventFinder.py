@@ -83,3 +83,11 @@ if __name__ == '__main__':
 	# # Other filters
 			# 'location=94110&within=30&units=miles'
 			# 'time=This+Weekend'
+
+
+
+# TODO items
+
+
+# import urllib
+# urllib.encode(searchArgs)
