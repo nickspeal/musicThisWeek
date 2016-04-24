@@ -2,6 +2,7 @@
 '''Get upcoming shows from bandsintown and create a spotify playlist'''
 
 import requests
+import json
 
 
 class Event(object):
@@ -41,18 +42,20 @@ class EventFinder(object):
 			eventfulEndpoint = self.assembleEndpoint()
 			
 			# Hit the server and generate list of upcoming events
-			resp = requests.get(eventfulEndpoint)
-			if (resp.status_code != 200):
-				raise UnexpectedStatusCode("Bad response from server. Status code: %i" %resp.status_code)
-			if not resp.ok:
+			self.resp = requests.get(eventfulEndpoint)
+			if (self.resp.status_code != 200):
+				raise UnexpectedStatusCode("Bad response from server. Status code: %i" %self.resp.status_code)
+			if not self.resp.ok:
 				raise BadResponse("Server Response Not OK")
 			
-			builder = EventBuilder(resp.json())
+			builder = EventBuilder(self.resp.json())
 			
 			self.upcomingEvents = []
 			for event in builder.build():
 				self.upcomingEvents.append(event)
 			
+
+
 	def assembleEndpoint(self):
 		'''Receives search parameters and returns a URL for the endpoint'''
 		# TODO specify provider as an argument, and call this method for each provider (maybe)
@@ -68,7 +71,7 @@ class EventFinder(object):
 		URL = baseURL	
 		for f in filters:
 			URL += '&' + f
-		print 'Hitting Endpoint : ' + URL
+		# print 'Hitting Endpoint : ' + URL
 
 		return URL
 
@@ -84,17 +87,22 @@ class EventFinder(object):
 						self.filteredUpcomingEvents.append(event)
 		print "Filtered events. %i of %i events are at one of the valid venues" % (len(self.filteredUpcomingEvents), len(self.upcomingEvents))
 
+	def saveEventsToFile(self, filename):
+		with open(filename, 'w') as outfile:
+			json.dump(self.resp.json(), outfile)
 
 if __name__ == '__main__':
-	searchArgs = SearchArgs(location = 'San+Francisco', time = 'Next+14+days', nResults = 100)
+	searchArgs = SearchArgs(location = 'San+Francisco', time = 'Next+14+days', nResults = 15)
+	filename = "./tmp/events.json"
 	EF = EventFinder(searchArgs)
-	print "Success. Saved %i events matching the search query" %len(EF.upcomingEvents)
-	EF.filterForKnownVenues()
-	
+	EF.saveEventsToFile(filename)
 
+	#print "Success. Saved %i events matching the search query" %len(EF.upcomingEvents)
+	#EF.filterForKnownVenues()
+	
 	# for event in EF.upcomingEvents:
 	# 	print event
-	# # Other filters
+	# # # Other filters
 			# 'location=94110&within=30&units=miles'
 			# 'time=This+Weekend'
 
