@@ -2,11 +2,18 @@ var querystring = require("querystring"),
     fs = require("fs"),
     pythonShell = require('python-shell');
 
-function start(response) {
+
+
+// UTILITIES
+
+// functions tbd
+
+
+    
+// CALLBACKS
+
+function welcome(response) {
   // Displays a welcome page
-
-  console.log("[Request handler]: 'start' was called.");
-
   var content = fs.readFileSync('./welcome.html');
 
   response.writeHead(200, {"Content-Type": "text/html"});
@@ -43,16 +50,6 @@ function viewEvents(response) {
   response.end();
 }
 
-
-function login(response) {
-  // Authenticate with Spotify, then automatically create the playlist.
-  console.log("[Request handler]: 'login' was called.");
-  response.writeHead(200, {"Content-Type": "text/html"});
-  response.write("Spotify Login goes here.");
-  response.end();
-}
-
-exports.start = start;
+exports.welcome = welcome;
 exports.findEvents = findEvents;
 exports.viewEvents = viewEvents;
-exports.login = login;
