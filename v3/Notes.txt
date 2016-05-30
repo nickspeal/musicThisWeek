@@ -1,0 +1,49 @@
+Notes.txt
+
+
+Main functionality
+eventFinder (done for now)
+generatePlaylist
+	Uses spotipy
+	Log in
+	Create playlist (Within account?)
+	Add song(s) to playlist
+
+
+
+Generate Playlist
+	Can probably grab some content from root
+	Need to figure out how to run a server? No I don't if I can just deal with authenticated stuff locally?
+
+
+
+Todos
+	get postman
+
+
+
+
+
+Credentials
+
+	export SPOTIPY_CLIENT_ID='338af3083e4e4069960c77b6978cb7a5'
+	export SPOTIPY_CLIENT_SECRET='9beb594d85ce466a9bf208de1f89aad3'
+	export SPOTIPY_REDIRECT_URI='http://localhost:8888/callback'
+
+
+User Flow
+
+Run musicThisWeek.py
+Phase 1: eventFinder
+	For now, prints hardcoded list of upcoming bands and dates
+Phase 2:
+	Prompts to Log In to Spotify
+	If not logged in, user goes through browser flow and pastes the URL
+	New playlist is created in the user's account, with songs from those artists.
+	Prints confirmation saying playlist created
+	Opens browser (or client) to the playlist and starts playing it
+
+
+
+
+get top tracks:  GET https://api.spotify.com/v1/artists/{id}/top-tracks
