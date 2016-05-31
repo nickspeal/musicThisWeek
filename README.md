@@ -23,7 +23,7 @@ Requests (2.9.1)
 2. Export the following environment variables:
 
 	~~~~
-	export SPOTIPY_CLIENT_ID='ask me for the client secret'
+	export SPOTIPY_CLIENT_ID='ask me for the client ID'
 
 	export SPOTIPY_CLIENT_SECRET='ask me for the secret'
 
@@ -33,6 +33,8 @@ Requests (2.9.1)
 3. `python musicThisWeek.py`
 
 4. follow instructions
+
+5. Play the playlist by clicking the link or browsing your playists in the Spotify app
  
 
 ## Development Status
