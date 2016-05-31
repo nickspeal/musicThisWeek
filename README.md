@@ -4,33 +4,34 @@ Generates a Spotify playlist of bands that are playing in your area in the near 
 
 ## Consituent parts
 
+musicThisWeek.py: Main program. Run it without arguments
+
 eventFinder.py: Crawls the internet to return a list of upcoming events in the specified city.
 
-generatePlaylist.py: Creates a spotify playlist based on a list of artists. (Not done yet)
+playlistCreator.py: Creates a spotify playlist based on a list of artists.
 
 ## Dependencies
 
-requests (2.9.1)
+Requests (2.9.1)
 
-Node.js
-
-A whole bunch of dependencies in packages.json. Type `npm install` to install them.
+[Spotipy](https://spotipy.readthedocs.io/en/latest/)
 
 # Instructions
 
 1. Install dependencies
 
-2. run `python eventFinder.py` to get a list of local events
+1. Export the following environment variables:
 
-3. run `node app.js` to run the server. Keep it going
+`export SPOTIPY_CLIENT_ID='ask me for the client secret'`
+`export SPOTIPY_CLIENT_SECRET='ask me for the secret'`
+`export SPOTIPY_REDIRECT_URI='http://localhost:8888/callback'`
 
-4. run `python generatePlaylist.py` 
+1. `python musicThisWeek.py`
 
-5. A web browser will pop up. Log into Spotify and then close the browser.
+1. follow instructions
+ 
 
-6. The python program will attempt to create a spotify playlist (But fail as of now, due to auth issues)
-
-## Status
+## Development Status
 
 In early development. Building up the components one block at a time.
 
