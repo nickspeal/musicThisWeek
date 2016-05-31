@@ -20,15 +20,19 @@ Requests (2.9.1)
 
 1. Install dependencies
 
-1. Export the following environment variables:
+2. Export the following environment variables:
 
-`export SPOTIPY_CLIENT_ID='ask me for the client secret'`
-`export SPOTIPY_CLIENT_SECRET='ask me for the secret'`
-`export SPOTIPY_REDIRECT_URI='http://localhost:8888/callback'`
+	~~~~
+	export SPOTIPY_CLIENT_ID='ask me for the client secret'
 
-1. `python musicThisWeek.py`
+	export SPOTIPY_CLIENT_SECRET='ask me for the secret'
 
-1. follow instructions
+	export SPOTIPY_REDIRECT_URI='http://localhost:8888/callback'
+	~~~~
+
+3. `python musicThisWeek.py`
+
+4. follow instructions
  
 
 ## Development Status
