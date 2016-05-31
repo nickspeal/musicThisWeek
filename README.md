@@ -20,6 +20,12 @@ Requests (2.9.1)
 
 1. Install dependencies
 
+	~~~~
+	pip install requests
+
+	pip install spotipy
+	~~~~
+
 2. Export the following environment variables:
 
 	~~~~
@@ -39,7 +45,7 @@ Requests (2.9.1)
 
 ## Development Status
 
-In early development. Building up the components one block at a time.
+In early development. Basic working prototype exists.
 
 ## Disclaimer
 
