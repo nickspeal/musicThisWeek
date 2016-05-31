@@ -1,7 +1,9 @@
+#!/usr/bin/python
 '''
 Music This Week
+Generates a Spotify playlist of bands that are playing in your area in the near future.
+Nick Speal 2016
 '''
-
 
 from playlistCreator import PlaylistCreator
 import eventFinder
@@ -9,8 +11,6 @@ import eventFinder
 '''
 Phase 1: Event Finder
 '''
-# For now hardcoded
-#artists = ["Radiohead", "Nick Cave & The Bad Seeds", "The 1975", '314123j312n3k12jn3']
 
 searchArgs = {'location':'San+Francisco',
 								'time': 'Next+14+days',

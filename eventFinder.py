@@ -1,5 +1,9 @@
 #!/usr/bin/python
-''' Crawl the web for upcoming concerts and return a list of artists'''
+'''
+Crawl the web for upcoming concerts and return a list of artists
+musicThisWeek
+Nick Speal 2016
+'''
 
 import requests
 import json
@@ -11,16 +15,13 @@ class EventFinder(object):
 		self.upcomingEvents = [] #A list of Event objects
 		self.validVenues = ['The Fillmore', 'Kilowatt', 'The Greek Theatre', 'Amnesia', "Thee Parkside", "Parkside", "The Chapel", "The Independent", "Doc's Lab", "MAIN STREETS MARKET AND CAFE", "Ashkenaz", "Freight & Salvage", "Fireside Lounge", "The Huddle", "Brick & Mortar", "Milk Bar", "Biscuits and Blues"]
 
-		#TODO break down large nResults into requested number of pages. Or specify max elapsed time?
-		# for venue in self.validVenues:
 		for page_number in range(1,10):
 			searchArgs['page_number'] = page_number
 			self.findEvents(searchArgs)
 			
-
-			print "Success. Saved %i events matching the search query" %len(self.upcomingEvents)
-		for event in self.upcomingEvents:
-			print event
+		print "Success. Saved %i events matching the search query" %len(self.upcomingEvents)
+		# for event in self.upcomingEvents:
+		# 	print event
 		self.filterForKnownVenues()
 
 		self.generateListOfArtists()	
@@ -56,7 +57,8 @@ class EventFinder(object):
 		return URL
 
 	def sendRequest(self, endpoint):
-		# Hit the server and generate list of upcoming events
+		'''Send the search query to the server'''
+
 		print "Sending request: " + endpoint
 		resp = requests.get(endpoint)
 		if (resp.status_code != 200):
@@ -66,20 +68,14 @@ class EventFinder(object):
 		return resp.json()
 
 	def buildEvents(self, json_response):
-		numResults = int(json_response['total_items'])
-		print numResults
-		if numResults > 0:
-			try:
-				for event_dict in json_response['events']['event']:
-					yield Event(event_dict)
-			except:
-				print json_response
-				print "\n\n"
+		self.numResults = int(json_response['total_items'])
+		if self.numResults > 0:
+			for event_dict in json_response['events']['event']:
+				yield Event(event_dict)
 
 	def filterForKnownVenues(self):
 		'''Reduces the upcomingEvents list down to just a list of events at known venues. An attempt to filter for concerts'''
 
-		
 		self.filteredUpcomingEvents = []
 		for event in self.upcomingEvents:
 			for venue in self.validVenues:
@@ -98,6 +94,11 @@ class EventFinder(object):
 		for event in self.upcomingEvents:
 			self.unfilteredArtists.append(event.title)
 
+	def printDiagnostics(self):
+		'''If requested, display debug info about the process'''
+		print "Number of records found across all pages: %i" %self.numResults
+
+
 
 class Event(object):
 	def __init__(self, event_dict):
@@ -112,8 +113,7 @@ class Event(object):
 		self.artist = None # TODO parse title creatively
 
 	def __repr__(self):
-		return "Title: %r \nVenue: %r \n" % (self.title, self.venue_name)
-
+		return "Title: %r \nVenue: %r" % (self.title, self.venue_name)
 
 
 

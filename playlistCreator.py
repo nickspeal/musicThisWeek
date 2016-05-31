@@ -1,3 +1,4 @@
+#!/usr/bin/python
 '''
 handles all interactions with Spotify
 musicThisWeek
@@ -29,7 +30,7 @@ class PlaylistCreator(object):
 		artistURIs = [self.filterArtist(a) for a in artists]
 		artistURIs = [a for a in artistURIs if a is not None]
 
-		print "Number of matching artists found: %i of %i" %len((artistURIs), %len(artists))
+		print "\n%i of the %i artists were found on Spotify." %(len(artistURIs), len(artists))
 		# Identify songs for the playlist; list of track URIs
 		self.tracks = []
 		for a in artistURIs:
@@ -40,6 +41,7 @@ class PlaylistCreator(object):
 
 		tracklist = self.tracks[0:99] #quick hack to get around 100 song limit for now.
 
+		print "Creating playlist of length: %i" %len(tracklist)
 		# Add trackIDs to playlist
 		self.sp.user_playlist_replace_tracks(self.username, playlistURL, tracklist)
 		return playlistURL
@@ -66,7 +68,7 @@ class PlaylistCreator(object):
 		Given a plaintext artist name, return a Spotify Artist URI
 		Returns None if no results found
 		'''
-		print "\n\nSearching for artist: " + artist
+		print "\nSearching for artist: " + artist
 		result = self.sp.search(q='artist:' + artist, type='artist')
 		artists = result['artists']['items'] #list of dicts
 		
@@ -109,13 +111,6 @@ class PlaylistCreator(object):
 		else:
 			return tracklist
 
-		#TODO error handling
-		# try:
-		# 	all
-		# except:
-		#   print "Failed to "
-		# 	return []
-
 
 	def getSpotifyPlaylist(self, title):
 		'''
@@ -135,10 +130,5 @@ class PlaylistCreator(object):
 
 	def printDiagnostics(self):
 		'''If requested, display debug info about the playlist generation process'''
-
 		
 		print "Number of tracks found: %i" %len(self.tracks)
-
-
-
-
