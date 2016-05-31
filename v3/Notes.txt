@@ -20,8 +20,13 @@ Generate Playlist
 Todos
 	get postman
 
+	unit tests
 
+	Figure out architecture and implement structure
+	Get MVP artist finder working with hardcoded list of venues to filter by
 
+	playlistCreator
+		check if logged in before doing things
 
 
 Credentials
@@ -45,5 +50,3 @@ Phase 2:
 
 
 
-
-get top tracks:  GET https://api.spotify.com/v1/artists/{id}/top-tracks
