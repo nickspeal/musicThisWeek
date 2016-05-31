@@ -29,16 +29,19 @@ class PlaylistCreator(object):
 		artistURIs = [self.filterArtist(a) for a in artists]
 		artistURIs = [a for a in artistURIs if a is not None]
 
+		print "Number of matching artists found: %i of %i" %len((artistURIs), %len(artists))
 		# Identify songs for the playlist; list of track URIs
 		self.tracks = []
 		for a in artistURIs:
-			self.tracks = self.tracks + self.findTopTracks(a)
+			self.tracks = self.tracks + self.findTopTracks(a, N=2)
 
 		# Randomize playlist order
 		shuffle(self.tracks)
 
+		tracklist = self.tracks[0:99] #quick hack to get around 100 song limit for now.
+
 		# Add trackIDs to playlist
-		self.sp.user_playlist_replace_tracks(self.username, playlistURL, self.tracks)
+		self.sp.user_playlist_replace_tracks(self.username, playlistURL, tracklist)
 		return playlistURL
 		
 	def login(self, username = "nickspeal"):
@@ -133,7 +136,9 @@ class PlaylistCreator(object):
 	def printDiagnostics(self):
 		'''If requested, display debug info about the playlist generation process'''
 
-		print "Number of tracks found: %i" &len(self.tracks)
+		
+		print "Number of tracks found: %i" %len(self.tracks)
+
 
 
 

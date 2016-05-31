@@ -1,2 +1,4 @@
 Notes.txt
 /tmp
+.cache-*
+*.pyc
