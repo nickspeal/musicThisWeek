@@ -16,6 +16,8 @@ Requests (2.9.1)
 
 [Spotipy](https://spotipy.readthedocs.io/en/latest/)
 
+Django (1.9.7)
+
 # Instructions
 
 1. Install dependencies
