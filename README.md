@@ -24,9 +24,11 @@ Requests (2.9.1)
 	pip install requests
 
 	pip install spotipy
+
+	pip install Django
 	~~~~
 
-2. Export the following environment variables:
+2. create a config file called spotipyCreds.sh:
 
 	~~~~
 	export SPOTIPY_CLIENT_ID='ask me for the client ID'
@@ -34,18 +36,22 @@ Requests (2.9.1)
 	export SPOTIPY_CLIENT_SECRET='ask me for the secret'
 
 	export SPOTIPY_REDIRECT_URI='http://localhost:8888/callback'
+
+	export DJANGO_SECRET_KEY='ask me'
+
+    export EVENTFUL_KEY='ask me'
 	~~~~
 
-3. `python musicThisWeek.py`
+3. `sh run.sh` This will source the above file, run the server, and open a browser for you!
 
-4. follow instructions
+4. Follow instructions in the browser
 
 5. Play the playlist by clicking the link or browsing your playists in the Spotify app
  
 
 ## Development Status
 
-In early development. Basic working prototype exists.
+In early development. Basic working prototype exists. Does not work for generic usernames.
 
 ## Disclaimer
 
