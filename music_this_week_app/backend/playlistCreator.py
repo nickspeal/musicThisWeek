@@ -11,6 +11,7 @@ import spotipy.util as util
 from spotipy import oauth2 #for login
 from random import shuffle
 
+import os
 
 class Playlist(object):
     def __init__(self):
@@ -55,9 +56,9 @@ class PlaylistCreator(object):
     def init_login(self,):
         self.username = "nickspeal" # hardcoded - TODO read this after user logs in.
         # Don't check this stuff in!!
-        client_id='338af3083e4e4069960c77b6978cb7a5'
-        client_secret='9beb594d85ce466a9bf208de1f89aad3'
-        redirect_uri='http://localhost:8888/callback'
+        client_id=os.getenv('SPOTIPY_CLIENT_ID')
+        client_secret = os.getenv('SPOTIPY_CLIENT_SECRET')
+        redirect_uri = os.getenv('SPOTIPY_REDIRECT_URI')
         scope = 'playlist-modify-public'
 
         self.sp_oauth = oauth2.SpotifyOAuth(client_id, client_secret, redirect_uri, scope=scope, cache_path=".cache-" + self.username)
