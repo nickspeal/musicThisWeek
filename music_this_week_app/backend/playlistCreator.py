@@ -55,7 +55,6 @@ class PlaylistCreator(object):
 
     def init_login(self,):
         self.username = "nickspeal" # hardcoded - TODO read this after user logs in.
-        # Don't check this stuff in!!
         client_id=os.getenv('SPOTIPY_CLIENT_ID')
         client_secret = os.getenv('SPOTIPY_CLIENT_SECRET')
         redirect_uri = os.getenv('SPOTIPY_REDIRECT_URI')
