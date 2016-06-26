@@ -1,26 +1,21 @@
 from django.test import TestCase
 
-from music_this_week_app.backend.playlistCreator import PlaylistCreator
-import music_this_week_app.backend.eventFinder as eventFinder
+from music_this_week_app.backend.spotifyHandler import PlaylistCreator
+from music_this_week_app.backend.master import Master
 
-class test_integration(TestCase):
+class test_integrations(TestCase):
     def setUp(self):
         self.search_args = {'location': 'San+Francisco',
                        'time': 'next+7+days',
                        'nResults': '5'}
+        self.master = Master()
 
-    def test_integration(self):
+    def test_integration_end_to_end(self):
         """test end to end flow"""
-        # Instantiate
 
         pc = PlaylistCreator()
-        pc.cli_login(username="nickspeal")
+        pc.cli_login("nickspeal")
 
-        # Search for list of upcoming artists
-        EF = eventFinder.EventFinder(self.search_args)
-
-        # Create a Spotify playlist with those artists
-        url = pc.createPlaylist(EF.unfilteredArtists)
-
-        print "\n\nSuccessfully Created a playlist! Give it a listen:"
+        url = self.master.execute(pc, self.search_args)
+        print "Playlist Generated:"
         print url

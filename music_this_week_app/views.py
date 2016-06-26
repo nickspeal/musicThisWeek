@@ -12,15 +12,12 @@ After a playlist is created, it redirects to the playlist URL
 
 
 from django.shortcuts import render
-# from django.template import loader
-
 from django.http import HttpResponse, HttpResponseRedirect
 
-from backend.playlistCreator import PlaylistCreator
-import backend.eventFinder as eventFinder
+from backend.spotifyHandler import PlaylistCreator
+import backend.master
 
-pc = PlaylistCreator()
-
+master = backend.master.Master() # master backend object for doing all the heavy lifting
 
 def home(request):
     context = {}
@@ -29,16 +26,38 @@ def home(request):
 
 def login(request):
     """Redirects user to Spotify Login page"""
+
+    # Instantiate a PlaylistCreator object for this user.
+    pc = PlaylistCreator()
+
+    # Ask Spotify for a login URL to send users to
     auth_url = pc.init_login()
-    print "Talking to Spotify. Redirecting for authorization"
+    print("Talking to Spotify. Redirecting for authorization")
+
+    # Save PlaylistCreator instance
+    # TODO SECURITY ISSUE: Pickle Session Serialization is unsafe
+    request.session['pc'] = pc
+
+    # Set session to expire when the browser closes
+    request.session.set_expiry(0)
+
     return HttpResponseRedirect(auth_url)
 
 
 def callback(request):
     """Response from Spotify Authentication comes to this endpoint with a code to continue"""
-    print "callback from spotify"
+    # Load PlaylistCreator
+    pc = request.session['pc']
+
+    # Parse out code from Spotify's request
     code = request.GET['code']
+
+    # Log in to Spotify with the code
     pc.login(code)
+
+    # Save PlaylistCreator instance
+    request.session['pc'] = pc
+
     return HttpResponseRedirect('/setup')
 
 
@@ -48,17 +67,20 @@ def setup(request):
     return render(request, 'music_this_week/setup.html', context)
 
 def search(request):
+    """ Search for shows and create playlist then redirect to it"""
+
+    # In the future, these search args will arrive with the HTTP request. Hardcoded for now
     searchArgs = {'location':'San+Francisco',
                   'time': 'next+7+days',
                   'nResults': '4'}
 
-    # Search for list of upcoming artists
-    EF = eventFinder.EventFinder(searchArgs)
+    # Load PlaylistCreator
+    pc = request.session['pc']
 
-    # Create a Spotify playlist with those artists
-    url = pc.createPlaylist(EF.unfilteredArtists)
+    # Main heavy lifting happens in the background
+    url = master.execute(pc, searchArgs)
 
-    print "\n\nSuccessfully Created a playlist! Give it a listen:"
-    print url
+    # Save PlaylistCreator instance, just in case
+    request.session['pc'] = pc
 
     return HttpResponseRedirect(url)
