@@ -12,8 +12,8 @@ class test_integration(TestCase):
     def test_integration(self):
         """test end to end flow"""
         # Instantiate
-        pc = PlaylistCreator()
 
+        pc = PlaylistCreator()
         pc.cli_login(username="nickspeal")
 
         # Search for list of upcoming artists
