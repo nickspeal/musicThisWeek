@@ -22,11 +22,6 @@ class EventFinder(object):
             self.findEvents(searchArgs)
 
         print "Success. Saved %i events matching the search query" %len(self.upcomingEvents)
-        # for event in self.upcomingEvents:
-        # 	print event
-        self.validVenues = ['The Fillmore', 'Kilowatt', 'The Greek Theatre', 'Amnesia', "Thee Parkside", "Parkside", "The Chapel", "The Independent", "Doc's Lab", "MAIN STREETS MARKET AND CAFE", "Ashkenaz", "Freight & Salvage", "Fireside Lounge", "The Huddle", "Brick & Mortar", "Milk Bar", "Biscuits and Blues"]
-        self.filteredUpcomingEvents = self.filterForKnownVenues()
-
         self.generateListOfArtists()
 
     def findEvents(self, searchArgs):
@@ -50,7 +45,6 @@ class EventFinder(object):
                              'page_number=%s' %searchArgs['page_number'],
                              'sort_order=popularity', #Customer Support says this should work but I see no evidence of it working
                              ]
-
 
         baseURL = 'http://api.eventful.com/json/events/search?app_key=%s' % EVENTFUL_KEY
 
@@ -76,31 +70,12 @@ class EventFinder(object):
             for event_dict in json_response['events']['event']:
                 yield Event(event_dict)
 
-    def filterForKnownVenues(self):
-        '''Reduces the upcomingEvents list down to just a list of events at known venues. An attempt to filter for concerts'''
-
-        filteredUpcomingEvents = []
-        for event in self.upcomingEvents:
-            for venue in self.validVenues:
-                if venue in event.venue_name:
-                    if event not in filteredUpcomingEvents:
-                        filteredUpcomingEvents.append(event)
-        print "Filtered events. %i of %i events are at one of the valid venues" % (len(filteredUpcomingEvents), len(self.upcomingEvents))
-        print filteredUpcomingEvents
-        return filteredUpcomingEvents
-
     def generateListOfArtists(self):
         self.artists = []
         self.unfilteredArtists = []
 
         for event in self.filteredUpcomingEvents:
             self.artists.append(event.title)
-        for event in self.upcomingEvents:
-            self.unfilteredArtists.append(event.title)
-
-    def printDiagnostics(self):
-        '''If requested, display debug info about the process'''
-        print "Number of records found across all pages: %i" %self.numResults
 
 
 class Event(object):
@@ -117,15 +92,3 @@ class Event(object):
 
     def __repr__(self):
         return "Title: %r \nVenue: %r" % (self.title, self.venue_name)
-
-if __name__ == '__main__':
-    searchArgs = {'location':'San+Francisco',
-                                'time': 'Next+14+days',
-                                'nResults': '10'}
-
-    EF = EventFinder(searchArgs)
-    print "\n\nFILTERED ARTISTS: "
-    print EF.artists #list of artists, ready to go into Spotify searches
-
-    print "\n\n\nUNFILTERED ARTISTS: "
-    print EF.unfilteredArtists #list of artists, ready to go into Spotify searches
