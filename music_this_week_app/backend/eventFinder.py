@@ -7,8 +7,9 @@ Nick Speal 2016
 
 import requests
 import os
+from datetime import datetime
 
-EVENTFUL_RESULTS_PER_PAGE = 100  # (I think it is max 100, default 20)
+EVENTFUL_RESULTS_PER_PAGE = 50  # (I think it is max 100, default 20)
 
 EVENTFUL_KEY = os.getenv('EVENTFUL_KEY')
 if not EVENTFUL_KEY:
@@ -29,8 +30,8 @@ class EventFinder(object):
         :return:
         """
 
-        # Determine how many pages are needed
-        nPages = int(searchArgs['nResults'])/EVENTFUL_RESULTS_PER_PAGE
+        # Determine how many pages are needed, integer division
+        nPages = int(searchArgs['nResults'])/EVENTFUL_RESULTS_PER_PAGE + 1
         for pageNum in range(1,nPages):
             # Assemble the Search Querie
             url = self.assembleRequest(searchArgs, pageNum)
@@ -51,10 +52,10 @@ class EventFinder(object):
 
         filters = ['category=music', #seems to return the same results for music or concerts, so this might be unnecessary
                              'location=%s' %searchArgs['location'],
-                             'time=%s' %searchArgs['time'],
+                             'date=%s' %searchArgs['date'],
                              'page_size=%s' %EVENTFUL_RESULTS_PER_PAGE,
                              'page_number=%s' %pageNum,
-                             'sort_order=popularity', #Customer Support says this should work but I see no evidence of it working
+                             'sort_order=popularity' #Customer Support says this should work but I see no evidence of it working
                              ]
 
         baseURL = 'http://api.eventful.com/json/events/search?app_key=%s' % EVENTFUL_KEY
@@ -83,30 +84,41 @@ class EventFinder(object):
 
     def generateListOfArtists(self):
         self.artists = []
+        self.performers = []
 
         for event in self.upcomingEvents:
             self.artists.append(event.title)
-
+            self.performers += event.performers
 
 class Event(object):
     def __init__(self, event_dict):
-
         self.url = event_dict['url']
         self.description = event_dict['description']
         self.id = event_dict['id']
 
         self.title = event_dict['title']
-        self.performers = event_dict['performers']
-        self.artist = None  # TODO parse title creatively
+        self.performers = []
+        # Performers will be None or a dict or a list of dicts
+        # Each must be treated differently:
+        if event_dict['performers'] is None:
+            pass
+        else:
+            p = event_dict['performers']['performer']
+            if type(p) is dict:
+                self.performers.append(p['name'])
+            elif type(p) is list:
+                for item in p:
+                    self.performers.append(item['name'])
+            else:
+                print type(p)
+                print p
+                raise Exception("Performers are formatted weirdly")
 
         self.venue_name = event_dict['venue_name']
         self.venue_address = event_dict['venue_address']
         self.latitude = event_dict['latitude']  # "37.7784991"
         self.longitude = event_dict['longitude']
         self.date = event_dict['start_time']  # "2016-07-19 19:30:00"
-        self.all_day = event_dict['all_day']
-
-
-
+        self.date = datetime.strptime(self.date, "%Y-%m-%d  %H:%M:%S")
     def __repr__(self):
         return "Title: %r \nVenue: %r" % (self.title, self.venue_name)

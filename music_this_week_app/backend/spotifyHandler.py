@@ -45,7 +45,12 @@ class SpotifySearcher(object):
         """
         if VERBOSE:
             print "\nSearching for artist: " + artist_name
-        result = self.sp.search(q='artist:' + artist_name, type='artist')
+        try:
+            result = self.sp.search(q='artist:' + artist_name, type='artist')
+        except spotipy.client.SpotifyException:
+            print("ERROR: Couldnt not find artist: %s." %artist_name)
+            print("trying again")
+            result = self.sp.search(q='artist:' + artist_name, type='artist')
         artists = result['artists']['items']  # list of dicts
 
         num_matches = int(result['artists']['total'])
@@ -101,6 +106,7 @@ class SpotifySearcher(object):
         if order == "shuffled":
             # Randomize playlist order
             shuffle(tracks)
+            print("Prior to trimming, the playlist is %i songs long" %len(tracks))
             tracklist = tracks[0:N]
         else:
             raise Exception("Invalid song list order specified")

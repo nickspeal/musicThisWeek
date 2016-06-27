@@ -33,7 +33,7 @@ class Master(object):
         # Search for list of upcoming artists
         ef = eventFinder.EventFinder()
         ef.searchForEvents(searchArgs)
-        artists = ef.artists
+        artists = ef.performers
 
         print("Searching for %i artists on Spotify..." %len(artists))
         # Validate and filter artists
