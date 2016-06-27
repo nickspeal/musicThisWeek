@@ -72,7 +72,7 @@ def search(request):
     # In the future, these search args will arrive with the HTTP request. Hardcoded for now
     searchArgs = {'location':'San+Francisco',
                   'time': 'next+7+days',
-                  'nResults': '4'}
+                  'nResults': '200'}
 
     # Load PlaylistCreator
     pc = request.session['pc']

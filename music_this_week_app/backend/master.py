@@ -31,14 +31,16 @@ class Master(object):
             raise Exception("ERROR: User is not logged in.")
 
         # Search for list of upcoming artists
-        EF = eventFinder.EventFinder(searchArgs)
-        unfiltered_artists = EF.unfilteredArtists
+        ef = eventFinder.EventFinder()
+        ef.searchForEvents(searchArgs)
+        artists = ef.artists
 
+        print("Searching for %i artists on Spotify..." %len(artists))
         # Validate and filter artists
-        artist_URIs = self.searcher.filter_list_of_artists(unfiltered_artists)
+        artist_URIs = self.searcher.filter_list_of_artists(artists)
         if len(artist_URIs) == 0:
             raise Exception("Error: No matching artists found")
-
+        print ("%i artists found on Spotify. Creating a playlist..." %len(artist_URIs))
         # Create List of Songs (track URIs)
         song_list = self.searcher.get_song_list(artist_URIs, N=99, order='shuffled')
 

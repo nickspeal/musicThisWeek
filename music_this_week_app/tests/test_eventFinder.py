@@ -12,3 +12,10 @@ class test_event_finder(TestCase):
         """test initialization of the class"""
         # Search for list of upcoming artists
         EF = eventFinder.EventFinder(self.search_args)
+
+
+
+# To Test
+# How many results per page
+# What are the names like from eventful
+# Are all the results in the specified search range?
