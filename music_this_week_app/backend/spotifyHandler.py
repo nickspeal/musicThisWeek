@@ -142,8 +142,7 @@ class PlaylistCreator(object):
         client_secret = os.getenv('SPOTIPY_CLIENT_SECRET')
         redirect_uri = os.getenv('SPOTIPY_REDIRECT_URI')
         scope = 'playlist-modify-public'
-
-        self.sp_oauth = oauth2.SpotifyOAuth(client_id, client_secret, redirect_uri, scope=scope, cache_path=".cache-" + self.username)
+        self.sp_oauth = oauth2.SpotifyOAuth(client_id, client_secret, redirect_uri, scope=scope, cache_path="./_data/.cache-" + self.username)
         return self.sp_oauth.get_authorize_url()
 
     def login(self, code):
