@@ -15,9 +15,12 @@ from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 
 from backend.spotifyHandler import PlaylistCreator
-import backend.master
+import backend
 
-master = backend.master.Master() # master backend object for doing all the heavy lifting
+master = backend.Master()
+# import backend.master
+
+# master = backend.master.Master() # master backend object for doing all the heavy lifting
 
 def home(request):
     context = {}

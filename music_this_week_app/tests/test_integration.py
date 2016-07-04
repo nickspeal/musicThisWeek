@@ -1,7 +1,7 @@
 from django.test import TestCase
 
 from music_this_week_app.backend.spotifyHandler import PlaylistCreator
-from music_this_week_app.backend.master import Master
+from music_this_week_app.backend import Master
 
 class test_integrations(TestCase):
     def setUp(self):
