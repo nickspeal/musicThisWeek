@@ -38,12 +38,15 @@ class EventFinder(object):
 
             # Submit the search query
             response = self.sendRequest(url)
+            if response is None:
+                print("ERROR: could not search Eventful for page %i of %i" % (pageNum, nPages))
+                continue
 
             # parse the events into a list of Event objects
             for event in self.buildEvents(response):
                 self.upcomingEvents.append(event)
 
-        print "Success. Saved %i events matching the search query" % len(self.upcomingEvents)
+        print "Done searching for events. Saved %i events matching the search query" % len(self.upcomingEvents)
         self.generateListOfArtists()
 
 
@@ -66,14 +69,18 @@ class EventFinder(object):
         return URL
 
     def sendRequest(self, endpoint):
-        '''Send the search query to Eventful'''
+        """Send the search query to Eventful"""
 
         print "Sending request: " + endpoint
         resp = requests.get(endpoint)
         if (resp.status_code != 200):
-            raise UnexpectedStatusCode("Bad response from server. Status code: %i" %resp.status_code)
+            print("Bad response from server. \n  Sent request: %s \n  Status code: %i" % (endpoint, resp.status_code))
+            print(resp.json())
+            return None
         if not resp.ok:
-            raise BadResponse("Server Response Not OK")
+            print("Server response Not OK. \n  Sent request: %s \n  Status code: %i" % (endpoint, resp.status_code))
+            print(resp.json())
+            return None
         return resp.json()
 
     def buildEvents(self, json_response):

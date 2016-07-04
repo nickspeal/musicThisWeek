@@ -48,9 +48,19 @@ class SpotifySearcher(object):
         try:
             result = self.sp.search(q='artist:' + artist_name, type='artist')
         except spotipy.client.SpotifyException:
-            print("ERROR: Couldnt not find artist: %s." %artist_name)
+            print("ERROR: Couldnt not find artist: %s" % artist_name)
             print("trying again")
-            result = self.sp.search(q='artist:' + artist_name, type='artist')
+            try:
+                result = self.sp.search(q='artist:' + artist_name, type='artist')
+            except spotipy.client.SpotifyException as error:
+                print("ERROR: Failed to search twice. Error below:")
+                print(error)
+                return None
+        except ValueError as error:
+            print("ERROR: Failure while searching Spotify for artist: %s" % artist_name)
+            print(error)
+            return None
+
         artists = result['artists']['items']  # list of dicts
 
         num_matches = int(result['artists']['total'])
