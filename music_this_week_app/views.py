@@ -14,13 +14,9 @@ After a playlist is created, it redirects to the playlist URL
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 
-from backend.spotifyHandler import PlaylistCreator
 import backend
+from backend.spotifyHandler import PlaylistCreator
 
-master = backend.Master()
-# import backend.master
-
-# master = backend.master.Master() # master backend object for doing all the heavy lifting
 
 def home(request):
     context = {}
@@ -81,7 +77,7 @@ def search(request):
     pc = request.session['pc']
 
     # Main heavy lifting happens in the background
-    url = master.execute(pc, searchArgs)
+    url = backend.execute(pc, searchArgs)
 
     # Save PlaylistCreator instance, just in case
     request.session['pc'] = pc

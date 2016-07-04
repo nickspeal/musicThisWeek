@@ -3,55 +3,50 @@ Main backend master that handles all the high level logic for execution.
 This keeps views.py lightweight.
 """
 
-# import music_this_week_app.backend.eventFinder as eventFinder
 
 import eventFinder
 from spotifyHandler import SpotifySearcher
 
-
-class Master(object):
-    def __init__(self):
-        self.searcher = SpotifySearcher()
+# Instantiate object used for handling Spotify requests without authorization, i.e. searching
+searcher = SpotifySearcher()
 
 
-    def logInToSpotify(self):
-        pass
+def execute(playlist_creator, search_args):
+    """
+    Main Search and Create Playlist Flow
 
-    def execute(self, playlist_creator, searchArgs):
-        """
-        Main Search and Create Playlist Flow
+    :param playlist_creator: spotifyHandler.PlaylistCreator object. Should be already logged in
+    :param search_args: dict of search arguments for eventful
+    :return:
+    """
 
-        :param playlist_creator: spotifyHandler.PlaylistCreator object. Should be already logged in
-        :param searchArgs: dict of search arguments for eventful
-        :return:
-        """
+    # Validate user is logged in
+    if not playlist_creator.is_logged_in():
+        raise Exception("ERROR: User is not logged in.")
 
-        # Validate user is logged in
-        if not playlist_creator.is_logged_in():
-            raise Exception("ERROR: User is not logged in.")
+    # Search for list of upcoming artists
+    ef = eventFinder.EventFinder()
+    ef.searchForEvents(search_args)
+    artists = ef.performers
 
-        # Search for list of upcoming artists
-        ef = eventFinder.EventFinder()
-        ef.searchForEvents(searchArgs)
-        artists = ef.performers
+    # Validate and filter artists
+    print("Searching for %i artists on Spotify..." % len(artists))
+    artist_URIs = searcher.filter_list_of_artists(artists)
+    if len(artist_URIs) == 0:
+        raise Exception("Error: No matching artists found")
 
-        print("Searching for %i artists on Spotify..." %len(artists))
-        # Validate and filter artists
-        artist_URIs = self.searcher.filter_list_of_artists(artists)
-        if len(artist_URIs) == 0:
-            raise Exception("Error: No matching artists found")
-        print ("%i artists found on Spotify. Creating a playlist..." %len(artist_URIs))
-        # Create List of Songs (track URIs)
-        song_list = self.searcher.get_song_list(artist_URIs, N=99, order='shuffled')
+    # Create List of Songs (track URIs)
+    print ("%i artists found on Spotify. Creating a playlist..." % len(artist_URIs))
+    song_list = searcher.get_song_list(artist_URIs, N=99, order='shuffled')
 
-        # Get Playlist ID
-        playlistURL = playlist_creator.get_spotify_playlist("musicThisWeek")
+    # Get Playlist ID
+    playlistURL = playlist_creator.get_spotify_playlist("musicThisWeek")
 
-        # Populate Playlist
-        playlist_creator.erase(playlistURL)
-        playlist_creator.add(playlistURL, song_list)
+    # Populate Playlist
+    playlist_creator.erase(playlistURL)
+    playlist_creator.add(playlistURL, song_list)
 
-        print("\n\nSuccessfully Created a playlist! Give it a listen:")
-        print(playlistURL)
+    print("\n\nSuccessfully Created a playlist! Give it a listen:")
+    print(playlistURL)
 
-        return playlistURL
+    return playlistURL

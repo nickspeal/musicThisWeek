@@ -8,7 +8,7 @@ Nick Speal 2016
 import sys
 import spotipy
 import spotipy.util as util
-from spotipy import oauth2 #for login
+from spotipy import oauth2 # for login
 from random import shuffle
 
 import os
@@ -16,11 +16,11 @@ import os
 VERBOSE = False
 
 class SpotifySearcher(object):
-    """Handles unauthenticated spotify requests like searching for artists and songs"""
+    """Handles unauthenticated Spotify requests like searching for artists and songs"""
 
     def __init__(self):
         # Init unauthorized Spotify handle
-        self.sp = spotipy.Spotify()
+        self.sp = spotipy.Spotify()  # This should be the only instance attribute, to maintain statelessness
 
     def filter_list_of_artists(self, unfiltered_artists):
         """
