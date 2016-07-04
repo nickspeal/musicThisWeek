@@ -19,6 +19,7 @@ from backend.spotifyHandler import PlaylistCreator
 
 
 def home(request):
+    """Show the user a home page with a button to get started"""
     context = {}
     return render(request, 'music_this_week/home.html', context)
 
