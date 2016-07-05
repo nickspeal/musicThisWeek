@@ -32,7 +32,7 @@ class EventFinder(object):
 
         # Determine how many pages are needed, integer division
         nPages = int(searchArgs['nResults'])/EVENTFUL_RESULTS_PER_PAGE + 1
-        for pageNum in range(1,nPages):
+        for pageNum in range(1,nPages+1):
             # Assemble the Search Querie
             url = self.assembleRequest(searchArgs, pageNum)
 
