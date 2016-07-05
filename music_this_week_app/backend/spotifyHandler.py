@@ -152,7 +152,7 @@ class PlaylistCreator(object):
         client_secret = os.getenv('SPOTIPY_CLIENT_SECRET')
         redirect_uri = os.getenv('SPOTIPY_REDIRECT_URI')
         scope = 'playlist-modify-public'
-        self.sp_oauth = oauth2.SpotifyOAuth(client_id, client_secret, redirect_uri, scope=scope, cache_path="./_data/.cache-" + self.username)
+        self.sp_oauth = oauth2.SpotifyOAuth(client_id, client_secret, redirect_uri, scope=scope)
         return self.sp_oauth.get_authorize_url()
 
     def login(self, code):
@@ -171,6 +171,7 @@ class PlaylistCreator(object):
         """
         self.username = username
         scope = 'playlist-modify-public'
+        # If a file called .cache-username exists, the cached token is used without having to talk to Spotify
         token = util.prompt_for_user_token(self.username, scope)
         if token:
             self.sp = spotipy.Spotify(auth=token)

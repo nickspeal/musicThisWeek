@@ -79,6 +79,14 @@ Django (1.9.7)
 * There is no explicit way to log out, but you can force the user to log in again (with the option to change accounts) by appending `&show_dialog=True` to the Authorization endpoint(Not supported by Spotipy).
 * More details on [Spotify's website](https://developer.spotify.com/web-api/authorization-guide/)
 
+For CLI Login:
+* We use `spotifyHander.PlaylistCreator.cli_login()` for a UI-free login
+* This uses a different spotipy method than the main flow.
+* We call `util.prompt_for_user_token()` with a `username` argument. Spotipy searches for a cached token file in the root directory called `.cache-username`
+* If that cache exists, we already have a token to use. If it doesn't, then we need to go through some back and forth in the browerser/cli.
+* `util.prompt_for_user_token()` always calls `oauth2.SpotifyOAuth` with the optional `cache_path` argument, so the cache file is always created if it didn't exist.
+* The cache file is not used for the main flow because the user's username is not known before they attempt to log in so we depend on Spotify's cookies, rather than a local cache.
+
 ## User Flows
 
 1. New user goes to the website, logs in for the first time, specifies search parameters, creates a playlist.

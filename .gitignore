@@ -1,5 +1,4 @@
 _private
-_data
 .cache-*
 *.pyc
 .idea
