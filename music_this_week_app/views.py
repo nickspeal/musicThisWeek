@@ -52,7 +52,10 @@ def login(request):
 def callback(request):
     """Response from Spotify Authentication comes to this endpoint with a code to continue"""
     # Load PlaylistCreator
-    pc = request.session['pc']
+    pc = request.session.get('pc')
+    if pc is None:
+        print("ERROR: callback called without pc session. Redirecting home.")
+        return HttpResponseRedirect('/')
 
     # Check for login error
     # for example, if the user hits cancel, we get "error=access_denied"
@@ -78,7 +81,10 @@ def setup(request):
     """Displays search args and a search button, which links to /search"""
 
     # Fetch user data
-    pc = request.session['pc']
+    pc = request.session.get('pc')
+    if pc is None:
+        print("ERROR: setup called without pc session. Redirecting home.")
+        return HttpResponseRedirect('/')
 
     context = pc.user_info
     return render(request, 'music_this_week/setup.html', context)
@@ -92,7 +98,10 @@ def search(request):
                   'nResults': '200'}
 
     # Load PlaylistCreator
-    pc = request.session['pc']
+    pc = request.session.get('pc')
+    if pc is None:
+        print("ERROR: search called without pc session. Redirecting home.")
+        return HttpResponseRedirect('/')
 
     # Main heavy lifting happens in the background
     url = backend.execute(pc, searchArgs)

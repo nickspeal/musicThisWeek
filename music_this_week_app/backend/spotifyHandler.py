@@ -132,7 +132,15 @@ class SpotifySearcher(object):
         :return: list of track URIs
         """
         tracklist = []
-        result = self.sp.artist_top_tracks(artist)
+        try:
+            result = self.sp.artist_top_tracks(artist)
+        except ConnectionError as e:
+            print "ERROR: connection pool is closed; searching Spotify for top tracks for this artist: " + artist
+            result = self.sp.artist_top_tracks(artist)
+            print "tried again"
+            print result
+            raise e
+
         for track in result['tracks']:
             tracklist.append(track['uri'])
         if len(tracklist) > N:
