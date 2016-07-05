@@ -32,7 +32,12 @@ def login(request):
 
     # Ask Spotify for a login URL to send users to
     auth_url = pc.init_login()
-    print("Talking to Spotify. Redirecting for authorization")
+
+
+    retry = request.GET.get('retry')
+    print("Talking to Spotify. Redirecting for authorization with retry = %s" % retry)
+    if retry == 'true':
+        auth_url = auth_url + '&show_dialog=True'
 
     # Save PlaylistCreator instance
     # TODO SECURITY ISSUE: Pickle Session Serialization is unsafe
@@ -49,8 +54,16 @@ def callback(request):
     # Load PlaylistCreator
     pc = request.session['pc']
 
+    # Check for login error
+    # for example, if the user hits cancel, we get "error=access_denied"
+    error_message = request.GET.get('error')
+    if error_message is not None:
+        print("ERROR: Could not authenticate with Spotify")
+        print(error_message)
+        return HttpResponseRedirect('/')
+
     # Parse out code from Spotify's request
-    code = request.GET['code']
+    code = request.GET.get('code')
 
     # Log in to Spotify with the code
     pc.login(code)
@@ -63,7 +76,11 @@ def callback(request):
 
 def setup(request):
     """Displays search args and a search button, which links to /search"""
-    context = {}
+
+    # Fetch user data
+    pc = request.session['pc']
+
+    context = pc.user_info
     return render(request, 'music_this_week/setup.html', context)
 
 def search(request):

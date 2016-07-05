@@ -143,11 +143,11 @@ class SpotifySearcher(object):
 class PlaylistCreator(object):
     def __init__(self):
         self.sp_oauth = None # Created in init_login
-        self.username = None # Created in init_login or cli_login
-        self.sp = None
+        self.username = None # Created in get_user_info
+        self.user_info = {} # Created in get_user_info
+        self.sp = None # created in login or cli_login
 
     def init_login(self):
-        self.username = "nickspeal" # hardcoded - TODO read this after user logs in.
         client_id=os.getenv('SPOTIPY_CLIENT_ID')
         client_secret = os.getenv('SPOTIPY_CLIENT_SECRET')
         redirect_uri = os.getenv('SPOTIPY_REDIRECT_URI')
@@ -157,27 +157,31 @@ class PlaylistCreator(object):
 
     def login(self, code):
         token = self.sp_oauth.get_access_token(code)
-        if token:
-            self.sp = spotipy.Spotify(auth=token['access_token'])
-            self.sp.trace = False # No idea what this does...
-        else:
-            raise Exception("ERROR: Can't get a token for ", self.username)
+        self.complete_login(token['access_token'])
 
     def cli_login(self, username):
         """
         Helper method for integration testing.
         init_login() and login() depend on a browser UI. This does something similar but works from the cli
+        :param username: name that a cached token would be saved under, in the form of .cache-username
         :return:
         """
-        self.username = username
+
         scope = 'playlist-modify-public'
+
         # If a file called .cache-username exists, the cached token is used without having to talk to Spotify
-        token = util.prompt_for_user_token(self.username, scope)
+        token = util.prompt_for_user_token(username, scope)
+        self.complete_login(token)
+
+    def complete_login(self, token):
+        """Common code for both cli_login() and login()"""
         if token:
             self.sp = spotipy.Spotify(auth=token)
             self.sp.trace = False  # No idea what this does...
+            self.get_user_info()
         else:
-            raise Exception("Can't get token from Spotify")
+            raise Exception("ERROR: Can't get a token from Spotify")
+
 
     def is_logged_in(self):
         """Check if a Spotify handle exists"""
@@ -185,6 +189,44 @@ class PlaylistCreator(object):
             return True
         else:
             return False
+
+    def get_user_info(self):
+        """
+        Immediately after login, save some information about the user
+
+        self.username is used in other methods
+        self.user_info is used in the /setup page to show profile info to the user
+        """
+        # sp.me() returns the following info:
+        #
+        # product
+        # display_name
+        # external_urls
+        # country
+        # uri
+        # id
+        # href
+        # followers
+        # images (list of dicts with these keys)
+        #     url
+        #     width
+        #     height
+        # type
+        # email
+
+        user = self.sp.me()
+        self.username = user['id']
+        try:
+            photo_url = user['images'][0]['url']
+        except IndexError:
+            # If user has no photo, use Spotify Logo
+            photo_url = 'https://lh3.googleusercontent.com/UrY7BAZ-XfXGpfkeWg0zCCeo-7ras4DCoRalC_WXXWTK9q5b0Iw7B0YQMsVxZaNB7DM=w300'
+        self.user_info = {"username": self.username,
+                          "display_name": user['display_name'],
+                          "profile": user['external_urls']['spotify'],
+                          "profile_photo": photo_url,
+                          "email": user.get('email')
+                          }
 
     def get_spotify_playlist(self, title):
         """
