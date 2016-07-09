@@ -1,18 +1,33 @@
 <!DOCTYPE html>
 <html>
-<title>
-    Music This Week: Setup
-</title>
+<head>
+    <title>
+        Music This Week: Setup
+    </title>
+</head>
 <body>
-    <h1 style="text-align: center;">Welcome, {{ display_name }}!</h1>
-    <p style="text-align: center;">&nbsp;<strong><img src="{{ profile_photo }}" alt="User Profile Photo for {{ username }}" /></strong></p>
-    <p style="text-align: center;"><a href="{{ profile }}" target="_blank">{{ username }}</a>&nbsp; &nbsp;&nbsp;<a href="/login/?retry=true">Switch Users</a></p>
-    <p style="text-align: center;"><span style="text-decoration: underline;">Search Arguments:</span></p>
-    <p style="text-align: center;"><strong>Location:</strong> San Francisco</p>
-    <p style="text-align: center;"><strong>Time range:</strong> Next 7 days</p>
-    <p style="text-align: center;">&nbsp;</p>
-    <p style="text-align: center;"><a title="search" href="/search"><img src="http://www.clker.com/cliparts/2/L/K/u/I/m/search-button-blue-hi.png" alt="Search button" width="300" /></a></p>
-    <p style="text-align: center;">&nbsp;</p>
-    <p style="text-align: center;">Please be patient. A few minutes after pressing the button, a playlist called musicThisWeek will appear in your spotify app.</p>
+    <div class="wrapper" style="text-align: center;">
+        <h1>Welcome, {{ display_name }}!</h1>
+        <p>&nbsp;<strong><img src="{{ profile_photo }}" alt="User Profile Photo for {{ username }}" /></strong></p>
+        <p><a href="{{ profile }}" target="_blank">{{ username }}</a>&nbsp; &nbsp;&nbsp;<a href="/login/?retry=true">Switch Users</a></p>
+        <p><span style="text-decoration: underline;">Search Arguments:</span></p>
+        <p><strong>Location:</strong> San Francisco</p>
+        <p><strong>Time range:</strong> Next 7 days</p>
+        <p>&nbsp;</p>
+        <form>
+            <button type="submit" id="search-button" onclick="buttonClick()">Search</button>
+        </form>
+        <p>&nbsp;</p>
+        <p id="wait-text" hidden="True">Please be patient. In few minutes a playlist called musicThisWeek will appear in your spotify app.<br><br>If you close this page, the playlist will still be created in the background.</p>
+    </div>
+
+    <script>
+        function buttonClick() {
+            document.getElementById('search-button').innerHTML = "Searching...";
+            document.getElementById('search-button').disabled = "True";
+            document.getElementById('wait-text').hidden = false;
+            location.href='/search';
+        }
+    </script>
 </body>
 </html>
