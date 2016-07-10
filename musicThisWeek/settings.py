@@ -23,9 +23,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ['159.203.246.166', 'mtw.speal.ca']
+ALLOWED_HOSTS = ['159.203.246.166', 'mtw.speal.ca', 'localhost']
 
 
 # Application definition
