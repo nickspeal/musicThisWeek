@@ -109,9 +109,14 @@ def search(request):
         return HttpResponseRedirect('/')
 
     # Main heavy lifting happens in the background
-    url = backend.execute(pc, search_args)
+    (url, error) = backend.execute(pc, search_args)
 
     # Save PlaylistCreator instance, just in case
     request.session['pc'] = pc
+
+    if error is not None:
+        resp = HttpResponse(error)
+        resp.status_code = 400
+        return resp
 
     return HttpResponseRedirect(url)

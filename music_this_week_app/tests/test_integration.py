@@ -16,6 +16,7 @@ class test_integrations(TestCase):
         pc = PlaylistCreator()
         pc.cli_login("nickspeal")
 
-        url = backend.execute(pc, self.search_args)
+        (url, error) = backend.execute(pc, self.search_args)
         print("Playlist Generated:")
         print(url)
+        print("Error: " + error)

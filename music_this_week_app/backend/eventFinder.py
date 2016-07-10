@@ -17,6 +17,8 @@ if not EVENTFUL_KEY:
 
 class EventFinder(object):
     def __init__(self):
+        self.artists = []
+        self.performers = []
         self.searchArgs = {}
         self.upcomingEvents = [] #A list of Event objects
 
@@ -30,8 +32,24 @@ class EventFinder(object):
         :return:
         """
 
+        # Check the result count for the desired search args
+        url = self.assembleRequest(searchArgs, pageNum=1, count_only=True)
+        response = self.sendRequest(url)
+        if response is None:
+            print "ERROR: No response from eventful"
+            return
+
+        number_of_available_results = int(response.get('total_items', 0))
+        number_of_requested_results = int(searchArgs.get('nResults'))
+
         # Determine how many pages are needed, integer division
-        nPages = int(searchArgs['nResults'])/EVENTFUL_RESULTS_PER_PAGE + 1
+        if number_of_available_results == 0:
+            return
+        elif number_of_available_results >= number_of_requested_results:
+            nPages = number_of_requested_results / EVENTFUL_RESULTS_PER_PAGE + 1
+        else:
+            nPages = number_of_available_results / EVENTFUL_RESULTS_PER_PAGE + 1
+
         for pageNum in range(1,nPages+1):
             # Assemble the Search Querie
             url = self.assembleRequest(searchArgs, pageNum)
@@ -41,7 +59,9 @@ class EventFinder(object):
             if response is None:
                 print("ERROR: could not search Eventful for page %i of %i" % (pageNum, nPages))
                 continue
-
+            elif response.get('events') is None:
+                print("ERROR: No eventful results for page %i of %i" % (pageNum, nPages))
+                continue
             # parse the events into a list of Event objects
             for event in self.buildEvents(response):
                 self.upcomingEvents.append(event)
@@ -49,8 +69,7 @@ class EventFinder(object):
         print "Done searching for events. Saved %i events matching the search query" % len(self.upcomingEvents)
         self.generateListOfArtists()
 
-
-    def assembleRequest(self, searchArgs, pageNum):
+    def assembleRequest(self, searchArgs, pageNum, count_only = False):
         '''Receives search parameters and returns a URL for the endpoint'''
 
         filters = ['category=music', #seems to return the same results for music or concerts, so this might be unnecessary
@@ -60,6 +79,8 @@ class EventFinder(object):
                              'page_number=%s' %pageNum,
                              'sort_order=popularity' #Customer Support says this should work but I see no evidence of it working
                              ]
+        if count_only:
+            filters.append('count_only=true')
 
         baseURL = 'http://api.eventful.com/json/events/search?app_key=%s' % EVENTFUL_KEY
 
@@ -70,9 +91,9 @@ class EventFinder(object):
 
     def sendRequest(self, endpoint):
         """Send the search query to Eventful"""
-
         print "Sending request: " + endpoint
         resp = requests.get(endpoint)
+
         if (resp.status_code != 200):
             print("Bad response from server. \n  Sent request: %s \n  Status code: %i" % (endpoint, resp.status_code))
             print(resp.json())
@@ -81,18 +102,16 @@ class EventFinder(object):
             print("Server response Not OK. \n  Sent request: %s \n  Status code: %i" % (endpoint, resp.status_code))
             print(resp.json())
             return None
+        if resp.headers.get('Content-length') == '0':
+            print "No content from Eventful for request: " + endpoint
+            return None
         return resp.json()
 
     def buildEvents(self, json_response):
-        self.numResults = int(json_response['total_items'])
-        if self.numResults > 0:
-            for event_dict in json_response['events']['event']:
-                yield Event(event_dict)
+        for event_dict in json_response['events']['event']:
+            yield Event(event_dict)
 
     def generateListOfArtists(self):
-        self.artists = []
-        self.performers = []
-
         for event in self.upcomingEvents:
             self.artists.append(event.title)
             self.performers += event.performers

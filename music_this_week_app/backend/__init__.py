@@ -17,12 +17,13 @@ def execute(playlist_creator, search_args):
 
     :param playlist_creator: spotifyHandler.PlaylistCreator object. Should be already logged in
     :param search_args: dict of search arguments for eventful
-    :return:
+    :return playlistURL: URL for the spotify playlist. None if one was not created
+    :return error: Error message, None if not applicable
     """
 
     # Validate user is logged in
     if not playlist_creator.is_logged_in():
-        raise Exception("ERROR: User is not logged in.")
+        return None, "Error: User is not logged in"
 
     # Search for list of upcoming artists
     ef = eventFinder.EventFinder()
@@ -33,7 +34,7 @@ def execute(playlist_creator, search_args):
     print("Searching for %i artists on Spotify..." % len(artists))
     artist_URIs = searcher.filter_list_of_artists(artists)
     if len(artist_URIs) == 0:
-        raise Exception("Error: No matching artists found")
+        return None, "No results found."
 
     # Create List of Songs (track URIs)
     print ("%i artists found on Spotify. Creating a playlist..." % len(artist_URIs))
@@ -49,4 +50,4 @@ def execute(playlist_creator, search_args):
     print("\n\nSuccessfully Created a playlist! Give it a listen:")
     print(playlistURL)
 
-    return playlistURL
+    return playlistURL, None
