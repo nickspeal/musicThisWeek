@@ -91,11 +91,16 @@ def setup(request):
 
 def search(request):
     """ Search for shows and create playlist then redirect to it"""
+    # Parse request for search arguments
+    search_args = dict(request.GET.items())
 
-    # In the future, these search args will arrive with the HTTP request. Hardcoded for now
-    searchArgs = {'location':'San+Francisco',
-                  'date': 'next+7+days',
-                  'nResults': '200'}
+    #Validate search arguments
+    if "location" not in search_args.keys() or "date" not in search_args.keys() or "nResults" not in search_args.keys():
+        print("ERROR: Bad search arguments")
+        print(search_args)
+        resp = HttpResponse("Bad Search Arguments")
+        resp.status_code = 400
+        return resp
 
     # Load PlaylistCreator
     pc = request.session.get('pc')
@@ -104,7 +109,7 @@ def search(request):
         return HttpResponseRedirect('/')
 
     # Main heavy lifting happens in the background
-    url = backend.execute(pc, searchArgs)
+    url = backend.execute(pc, search_args)
 
     # Save PlaylistCreator instance, just in case
     request.session['pc'] = pc
