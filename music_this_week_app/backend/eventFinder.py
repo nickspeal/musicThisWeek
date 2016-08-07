@@ -7,8 +7,8 @@ Nick Speal 2016
 
 import requests
 import os
-from datetime import datetime
-
+from datetime import datetime, timedelta
+import re
 EVENTFUL_RESULTS_PER_PAGE = 50  # (I think it is max 100, default 20)
 
 EVENTFUL_KEY = os.getenv('EVENTFUL_KEY')
@@ -72,10 +72,12 @@ class EventFinder(object):
     def assembleRequest(self, searchArgs, pageNum, count_only = False):
         '''Receives search parameters and returns a URL for the endpoint'''
 
+        parsedDate = self.parseDate(searchArgs['date'])
+
         filters = [ '',
                     'category=music', #seems to return the same results for music or concerts, so this might be unnecessary
                     'location=%s' %searchArgs['location'],
-                    'date=%s' %searchArgs['date'],
+                    'date=%s' %parsedDate,
                     'page_size=%s' %EVENTFUL_RESULTS_PER_PAGE,
                     'page_number=%s' %pageNum,
                     'sort_order=popularity' #Customer Support says this should work but I see no evidence of it working
@@ -88,6 +90,22 @@ class EventFinder(object):
         URL = baseURL + filterString
 
         return URL
+
+    def parseDate(self, dateArg):
+        '''Formats string into date range in accordance with requirement from eventful API
+
+           :param dateArg: a string representation of date currently of format: 'Next [int] days'
+           :returns: string of format 'YYYYMMDD00-YYYYMMDD00' '''
+
+        #get the number contained in the string
+        number = int(re.search(r'\d+', dateArg).group())
+        month =  'month' in dateArg
+        currentDate = datetime.now().date()
+        #month not technically 31 days but close enough
+        delta = timedelta(number*31 if month else number)
+        endDate = currentDate + delta
+        formattedDate = currentDate.strftime('%Y%m%d00') + '-' + endDate.strftime('%Y%m%d00')
+        return formattedDate
 
     def sendRequest(self, endpoint):
         """Send the search query to Eventful"""
