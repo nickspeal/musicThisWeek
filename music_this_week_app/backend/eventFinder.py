@@ -36,7 +36,7 @@ class EventFinder(object):
         url = self.assembleRequest(searchArgs, pageNum=1, count_only=True)
         response = self.sendRequest(url)
         if response is None:
-            print "ERROR: No response from eventful"
+            print ("ERROR: No response from eventful")
             return
 
         number_of_available_results = int(response.get('total_items', 0))
@@ -46,9 +46,9 @@ class EventFinder(object):
         if number_of_available_results == 0:
             return
         elif number_of_available_results >= number_of_requested_results:
-            nPages = number_of_requested_results / EVENTFUL_RESULTS_PER_PAGE + 1
+            nPages = number_of_requested_results // EVENTFUL_RESULTS_PER_PAGE + 1
         else:
-            nPages = number_of_available_results / EVENTFUL_RESULTS_PER_PAGE + 1
+            nPages = number_of_available_results // EVENTFUL_RESULTS_PER_PAGE + 1
 
         for pageNum in range(1,nPages+1):
             # Assemble the Search Querie
@@ -66,32 +66,32 @@ class EventFinder(object):
             for event in self.buildEvents(response):
                 self.upcomingEvents.append(event)
 
-        print "Done searching for events. Saved %i events matching the search query" % len(self.upcomingEvents)
+        print ("Done searching for events. Saved %i events matching the search query" % len(self.upcomingEvents) )
         self.generateListOfArtists()
 
     def assembleRequest(self, searchArgs, pageNum, count_only = False):
         '''Receives search parameters and returns a URL for the endpoint'''
 
-        filters = ['category=music', #seems to return the same results for music or concerts, so this might be unnecessary
-                             'location=%s' %searchArgs['location'],
-                             'date=%s' %searchArgs['date'],
-                             'page_size=%s' %EVENTFUL_RESULTS_PER_PAGE,
-                             'page_number=%s' %pageNum,
-                             'sort_order=popularity' #Customer Support says this should work but I see no evidence of it working
-                             ]
-        if count_only:
-            filters.append('count_only=true')
+        filters = [ '',
+                    'category=music', #seems to return the same results for music or concerts, so this might be unnecessary
+                    'location=%s' %searchArgs['location'],
+                    'date=%s' %searchArgs['date'],
+                    'page_size=%s' %EVENTFUL_RESULTS_PER_PAGE,
+                    'page_number=%s' %pageNum,
+                    'sort_order=popularity' #Customer Support says this should work but I see no evidence of it working
+                   ]
+        filterString = '&'.join(filters + ['count_only=true'] if count_only else filters)
+
 
         baseURL = 'http://api.eventful.com/json/events/search?app_key=%s' % EVENTFUL_KEY
 
-        URL = baseURL
-        for f in filters:
-            URL += '&' + f
+        URL = baseURL + filterString
+
         return URL
 
     def sendRequest(self, endpoint):
         """Send the search query to Eventful"""
-        print "Sending request: " + endpoint
+        print ("Sending request: " + endpoint)
         resp = requests.get(endpoint)
 
         if (resp.status_code != 200):
@@ -103,7 +103,7 @@ class EventFinder(object):
             print(resp.json())
             return None
         if resp.headers.get('Content-length') == '0':
-            print "No content from Eventful for request: " + endpoint
+            print ("No content from Eventful for request: " + endpoint)
             return None
         return resp.json()
 
@@ -136,8 +136,8 @@ class Event(object):
                 for item in p:
                     self.performers.append(item['name'])
             else:
-                print type(p)
-                print p
+                print (type(p))
+                print (p)
                 raise Exception("Performers are formatted weirdly")
 
         self.venue_name = event_dict['venue_name']
@@ -148,3 +148,4 @@ class Event(object):
         self.date = datetime.strptime(self.date, "%Y-%m-%d  %H:%M:%S")
     def __repr__(self):
         return "Title: %r \nVenue: %r" % (self.title, self.venue_name)
+

@@ -44,7 +44,7 @@ class SpotifySearcher(object):
         :return artistURI: Verified Spotify artist identifier. Return None if no match
         """
         if VERBOSE:
-            print "\nSearching for artist: " + artist_name
+            print ("\nSearching for artist: " + artist_name)
         try:
             result = self.sp.search(q='artist:' + artist_name, type='artist')
         except spotipy.client.SpotifyException:
@@ -66,26 +66,26 @@ class SpotifySearcher(object):
         num_matches = int(result['artists']['total'])
         if num_matches == 0:
             if VERBOSE:
-                print "No matches found!"
+                print( "No matches found!")
             return None
 
         elif num_matches == 1:
             if VERBOSE:
-                print "1 match found: " + artists[0]['name']
+                print ("1 match found: " + artists[0]['name'])
                 if artists[0]['name'] == artist_name:
-                    print "Exact match!"
+                    print ("Exact match!")
                 else:
-                    print "Close enough..."
+                    print ("Close enough...")
             return artists[0]['uri']
 
         elif num_matches > 1:
             if VERBOSE:
-                print "%i matches found: " % num_matches + str([a['name'] for a in artists])
+                print ("%i matches found: " % num_matches + str([a['name'] for a in artists]) )
             # check for exact match
             for a in artists:
                 if a['name'] == artist_name:
                     if VERBOSE:
-                        print "Exact match found!"
+                        print("Exact match found!")
                     return a['uri']
             # If there is no exact match, the first match is probably best.
             return artists[0]['uri']
@@ -104,7 +104,7 @@ class SpotifySearcher(object):
         """
 
         # Calculate number of tracks per artist. Round up to nearest int w/ int division then trim list later.
-        number_of_tracks_per_artist = N/len(artist_URIs) + 1
+        number_of_tracks_per_artist = N // len(artist_URIs) + 1
         if number_of_tracks_per_artist > 10:
             print("Number of tracks per artist, %i, cannot be greater than 10." %number_of_tracks_per_artist)
 
@@ -135,10 +135,10 @@ class SpotifySearcher(object):
         try:
             result = self.sp.artist_top_tracks(artist)
         except ConnectionError as e:
-            print "ERROR: connection pool is closed; searching Spotify for top tracks for this artist: " + artist
+            print ("ERROR: connection pool is closed; searching Spotify for top tracks for this artist: " + artist)
             result = self.sp.artist_top_tracks(artist)
-            print "tried again"
-            print result
+            print ("tried again")
+            print (result)
             raise e
 
         for track in result['tracks']:

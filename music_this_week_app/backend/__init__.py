@@ -3,7 +3,6 @@ Main backend master that handles all the high level logic for execution.
 This keeps views.py lightweight.
 """
 
-
 import eventFinder
 from spotifyHandler import SpotifySearcher
 
