@@ -3,3 +3,4 @@ _private
 *.pyc
 .idea
 mtw
+!.cache-nickspeal_test.enc
