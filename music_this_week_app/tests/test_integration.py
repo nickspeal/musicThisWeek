@@ -14,9 +14,12 @@ class test_integrations(TestCase):
         """test end to end flow"""
 
         pc = PlaylistCreator()
-        pc.cli_login("nickspeal")
+        pc.cli_login("nickspeal_test")
 
         (url, error) = backend.execute(pc, self.search_args)
         print("Playlist Generated:")
         print(url)
-        print("Error: " + error)
+        if error:
+            print("Error: " + error)
+        else:
+            print("No Errors returned from backend.execute")
