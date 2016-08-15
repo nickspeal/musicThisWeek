@@ -8,6 +8,7 @@ Nick Speal 2016
 import requests
 import os
 from datetime import datetime
+import re
 
 EVENTFUL_RESULTS_PER_PAGE = 50  # (I think it is max 100, default 20)
 
@@ -71,11 +72,11 @@ class EventFinder(object):
 
     def assembleRequest(self, searchArgs, pageNum, count_only = False):
         '''Receives search parameters and returns a URL for the endpoint'''
-
+	parsedDate = self.parseDate(searchArgs['start'], searchArgs['end'])
         filters = [ '',
                     'category=music', #seems to return the same results for music or concerts, so this might be unnecessary
                     'location=%s' %searchArgs['location'],
-                    'date=%s' %searchArgs['date'],
+                    'date=%s' %parsedDate,
                     'page_size=%s' %EVENTFUL_RESULTS_PER_PAGE,
                     'page_number=%s' %pageNum,
                     'sort_order=popularity' #Customer Support says this should work but I see no evidence of it working
@@ -88,6 +89,10 @@ class EventFinder(object):
         URL = baseURL + filterString
 
         return URL
+
+    def parseDate(self, start, end):
+        parsedDate = re.sub('-', '', start) + '00-' + re.sub('-','', end) + '00'
+        return parsedDate
 
     def sendRequest(self, endpoint):
         """Send the search query to Eventful"""

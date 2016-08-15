@@ -86,7 +86,8 @@ def setup(request):
         print("ERROR: setup called without pc session. Redirecting home.")
         return HttpResponseRedirect('/')
 
-    context = pc.user_info
+    context = dict(pc.user_info, **{'location': request.session.get('location')} )
+    print(type(request.session.get('location')))
     return render(request, 'music_this_week/setup.html', context)
 
 def search(request):
@@ -94,8 +95,10 @@ def search(request):
     # Parse request for search arguments
     search_args = dict(request.GET.items())
 
+    request.session['location'] = search_args['location']
+    print
     #Validate search arguments
-    if "location" not in search_args.keys() or "date" not in search_args.keys() or "nResults" not in search_args.keys():
+    if "location" not in search_args.keys() or search_args["start"] == '' or search_args["end"] =='' or  "nResults" not in search_args.keys():
         print("ERROR: Bad search arguments")
         print(search_args)
         resp = HttpResponse("Bad Search Arguments")

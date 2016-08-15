@@ -8,12 +8,15 @@ Nick Speal 2016
 import sys
 import spotipy
 import spotipy.util as util
+
 from spotipy import oauth2 # for login
 from random import shuffle
+from music_this_week_app.models import Artist
 
 import os
 
-VERBOSE = False
+VERBOSE = False 
+SAVE_ARTIST_URIS = True
 
 class SpotifySearcher(object):
     """Handles unauthenticated Spotify requests like searching for artists and songs"""
@@ -29,22 +32,37 @@ class SpotifySearcher(object):
         :param unfiltered_artists: list of strings of artist names
         :return artistURIs: list of strings of verified Spotify artist identifiers
         """
-
-        artistURIs = [self.filter_artist(a) for a in unfiltered_artists]
-        artistURIs = [a for a in artistURIs if a is not None]
+        print(Artist.objects.all())
+       #artist_data tuples have format (bool foundInDB, str URI or None, str name)
+        artist_data = [self.filter_artist(a) +  (a,) for a in unfiltered_artists]
+       # (URI, name) tuple pairs go in new_artist_data if they were not found in the DB
+        new_artist_data = [ a[1:] for a in artist_data if not a[0] ]
+	if VERBOSE:
+		print("New Artists found: " + str(new_artist_data))
+        artistURIs = [a[1] for a in artist_data if a[1]]
         if VERBOSE:
             print("\n%i of the %i artists were found on Spotify." % (len(artistURIs), len(unfiltered_artists)))
+        if SAVE_ARTIST_URIS:
+		for new_artist_tuple in new_artist_data:
+			#check URI not NONE before saving in DB
+			if new_artist_tuple[0]:
+				self.save_artist_uris(*new_artist_tuple)
         return artistURIs
 
     def filter_artist(self, artist_name):
         """
-        Matches an artist name to an Artist URI on Spotify
+        First check if artist/URI pair in DB if not matches an artist name to an Artist URI using spotify api 
 
         :param artist_name: string
-        :return artistURI: Verified Spotify artist identifier. Return None if no match
+        :return (artistURI, isInDB): (Verified Spotify artist identifier,True if  found in DB else False). Return (None, False) if no match
         """
         if VERBOSE:
             print ("\nSearching for artist: " + artist_name)
+        database_check = self.filter_artist_database(artist_name)
+        if database_check: 
+            print("Found " + artist_name + "in db") #if VERBOSE else None
+	    print(database_check)
+            return (True, database_check)
         try:
             result = self.sp.search(q='artist:' + artist_name, type='artist')
         except spotipy.client.SpotifyException:
@@ -55,43 +73,73 @@ class SpotifySearcher(object):
             except spotipy.client.SpotifyException as error:
                 print("ERROR: Failed to search twice. Error below:")
                 print(error)
-                return None
+                return (False,None)
         except ValueError as error:
             print("ERROR: Failure while searching Spotify for artist: %s" % artist_name)
             print(error)
-            return None
+            return (False, None)
 
         artists = result['artists']['items']  # list of dicts
-
+        artist_uris = str([artist['uri'] for artist in artists])
         num_matches = int(result['artists']['total'])
         if num_matches == 0:
             if VERBOSE:
                 print( "No matches found!")
-            return None
+            return (False, None)
 
         elif num_matches == 1:
             if VERBOSE:
                 print ("1 match found: " + artists[0]['name'])
-                if artists[0]['name'] == artist_name:
+                print("artist URIs: " + artist_uris)
+                if artists[0]['name'].lower()  == artist_name.lower():
                     print ("Exact match!")
                 else:
                     print ("Close enough...")
-            return artists[0]['uri']
+            return (False,artists[0]['uri'] )
 
         elif num_matches > 1:
             if VERBOSE:
                 print ("%i matches found: " % num_matches + str([a['name'] for a in artists]) )
+                print("artist URIs: " + artist_uris)
             # check for exact match
             for a in artists:
-                if a['name'] == artist_name:
+                if a['name'].lower()  == artist_name.lower():
                     if VERBOSE:
                         print("Exact match found!")
-                    return a['uri']
+                    return (False,a['uri']) 
             # If there is no exact match, the first match is probably best.
-            return artists[0]['uri']
+            return (False,artists[0]['uri'] )
 
         # If we don't return in one of the If statements above, abort
         raise Exception('unexpected number of matches (%i) for artist %s' % (num_matches, artist))
+
+    def filter_artist_database(self, artist_name):
+        """ 
+        looks up artist name in database 
+        :param artist_name: string, artist_name
+        :return artist_uri: string or None, the artist's spotify uri if found in DB, else None
+        """
+        print("Checking DB for %s" %artist_name)
+        try:
+            artist_entry = Artist.objects.get(name = artist_name)
+        except Exception: #django.db.models.Models.DoesNotExist:
+	    print("could not find %s in db" %artist_name)
+	    return None
+        else:
+	    print("FOUND  %s in db" %artist_name)
+	    return artist_entry.spotify_uri
+
+    def save_artist_uris(self, artist_uri, artist_name):
+        """
+        saves artist name/uri pairs to DB 
+        :param new_artist_pairs: list of tuples, a list of tuples of format (String uri, String name) of new artist/uri pairs for db:
+        :return None:
+        """
+        artist = Artist(spotify_uri = artist_uri, name = artist_name)
+        if VERBOSE:
+		print("saving %s in DB"% artist_name)
+        artist.save()
+	return None
 
     def get_song_list(self, artist_URIs, N=99, order="shuffled"):
         """
