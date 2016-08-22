@@ -23,31 +23,29 @@ def time_ms():
     return int(round(time.time() * 1000))
 
 
-def check_response(response):
+def request_was_successful(response):
+    """ Checks if the request succeeded, returns a boolean. """
     status_code = response.status_code
-
     try:
         response_json = response.json()
     except ValueError:
-        print("Unable to parse JSON from server for %s response: %s" % (url, response))
-        return None
-
+        print("Unable to parse JSON from server for %s response: %s" % (response.url, response))
+        return False
     if not response.ok:
-        print("Server response Not OK. \n  Sent request: %s \n  Status code: %i" % (url, status_code))
+        print("Server response Not OK. \n  Sent request: %s \n  Status code: %i" % (response.url, status_code))
         print(response_json)
-        return None
+        return False
     if (status_code != 200):
-        print("Bad response from server. \n  Sent request: %s \n  Status code: %i" % (url, status_code))
+        print("Bad response from server. \n  Sent request: %s \n  Status code: %i" % (response.url, status_code))
         print(response)
-        return None
+        return False
     if response_json is None:
-        print("ERROR: could not search Eventful for url %s" % (url))
-        return None
+        print("ERROR: could not search Eventful for url %s" % (response.url))
+        return False
     if response.headers.get('Content-length') == '0':
-        print ("No content from Eventful for request: " + url)
-        return None
-
-    return response
+        print ("No content from Eventful for request: " + response.url)
+        return False
+    return True
 
 
 class EventFinder(object):
@@ -66,7 +64,7 @@ class EventFinder(object):
         response = requests.get(url)
         print('Request to ' + url + ' took ' + str(time_ms() - start_ms) + ' ms')
 
-        if check_response(response) is None:
+        if not request_was_successful(response):
             print("ERROR: No response from eventful.")
             return 0
 
@@ -78,7 +76,8 @@ class EventFinder(object):
 
     def store_events(self, responses, total_pages):
         for page, response in enumerate(responses, start=1):
-            if check_response(response) is None:
+            url = response.url
+            if not request_was_successful(response):
                 break
             if page > total_pages:
                 break
