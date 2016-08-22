@@ -5,15 +5,51 @@ musicThisWeek
 Nick Speal 2016
 """
 
-import requests
-import os
+from collections import namedtuple
 from datetime import datetime
+import os
+import time
+
+import grequests
+import requests
 
 EVENTFUL_RESULTS_PER_PAGE = 50  # (I think it is max 100, default 20)
 
 EVENTFUL_KEY = os.getenv('EVENTFUL_KEY')
 if not EVENTFUL_KEY:
     raise Exception("Bad Eventful Key: " + str(EVENTFUL_KEY))
+
+
+def time_ms():
+    return int(round(time.time() * 1000))
+
+
+def check_response(response):
+    status_code = response.status_code
+
+    try:
+        response_json = response.json()
+    except ValueError:
+        print("Unable to parse JSON from server for %s response: %s" % (url, response))
+        return None
+
+    if not response.ok:
+        print("Server response Not OK. \n  Sent request: %s \n  Status code: %i" % (url, status_code))
+        print(response_json)
+        return None
+    if (status_code != 200):
+        print("Bad response from server. \n  Sent request: %s \n  Status code: %i" % (url, status_code))
+        print(response)
+        return None
+    if response_json is None:
+        print("ERROR: could not search Eventful for url %s" % (url))
+        return None
+    if response.headers.get('Content-length') == '0':
+        print ("No content from Eventful for request: " + url)
+        return None
+
+    return response
+
 
 class EventFinder(object):
     def __init__(self):
@@ -22,49 +58,58 @@ class EventFinder(object):
         self.searchArgs = {}
         self.upcomingEvents = [] #A list of Event objects
 
-    def searchForEvents(self, searchArgs):
+    def get_total_pages_to_search(self, search_args):
+        """ Check the result count for the desired search args """
+        url = self.assembleRequest(search_args, pageNum=1, count_only=True)
+
+        start_ms = time_ms()
+        print('Request to %s' % url)
+        response = requests.get(url)
+        print('Request to ' + url + ' took ' + str(time_ms() - start_ms) + ' ms')
+
+        if check_response(response) is None:
+            print("ERROR: No response from eventful.")
+            return 0
+
+        total_available = int(response.json().get('total_items', 0))
+        total_requested = int(search_args.get('nResults'))
+        total_events = min([total_available, total_requested])
+
+        return total_events / EVENTFUL_RESULTS_PER_PAGE + 1
+
+    def store_events(self, responses, total_pages):
+        for page, response in enumerate(responses, start=1):
+            if check_response(response) is None:
+                break
+            if page > total_pages:
+                break
+            json = response.json()
+            if json.get('events') is None:
+                print("ERROR: No eventful results for page %d" % page)
+            else:
+                # parse the events into a list of Event objects
+                events = map(Event, json['events']['event'])
+                self.upcomingEvents.extend(events)
+
+    def searchForEvents(self, search_args):
         """
         Called by an external master, triggers a search
 
         Saves self.artists, self.upcomingEvents
 
-        :param searchArgs: Dict of eventful arguments. nResults is max number of events
+        :param search_args: Dict of eventful arguments. nResults is max number of events
         :return:
         """
+        print('Checking how many pages to crawl...')
+        pages = self.get_total_pages_to_search(search_args)
+        urls = [self.assembleRequest(search_args, p) for p in range(1, pages + 1)] 
 
-        # Check the result count for the desired search args
-        url = self.assembleRequest(searchArgs, pageNum=1, count_only=True)
-        response = self.sendRequest(url)
-        if response is None:
-            print ("ERROR: No response from eventful")
-            return
+        print('Crawling %d pages from the eventful api...' % pages)
+        start_ms = time_ms()
+        responses = grequests.map(grequests.get(u) for u in urls)
+        print('Crawling took ' + str(time_ms() - start_ms) + ' ms')
 
-        number_of_available_results = int(response.get('total_items', 0))
-        number_of_requested_results = int(searchArgs.get('nResults'))
-
-        # Determine how many pages are needed, integer division
-        if number_of_available_results == 0:
-            return
-        elif number_of_available_results >= number_of_requested_results:
-            nPages = number_of_requested_results // EVENTFUL_RESULTS_PER_PAGE + 1
-        else:
-            nPages = number_of_available_results // EVENTFUL_RESULTS_PER_PAGE + 1
-
-        for pageNum in range(1,nPages+1):
-            # Assemble the Search Querie
-            url = self.assembleRequest(searchArgs, pageNum)
-
-            # Submit the search query
-            response = self.sendRequest(url)
-            if response is None:
-                print("ERROR: could not search Eventful for page %i of %i" % (pageNum, nPages))
-                continue
-            elif response.get('events') is None:
-                print("ERROR: No eventful results for page %i of %i" % (pageNum, nPages))
-                continue
-            # parse the events into a list of Event objects
-            for event in self.buildEvents(response):
-                self.upcomingEvents.append(event)
+        self.store_events(responses, pages)
 
         print ("Done searching for events. Saved %i events matching the search query" % len(self.upcomingEvents) )
         self.generateListOfArtists()
@@ -89,34 +134,13 @@ class EventFinder(object):
 
         return URL
 
-    def sendRequest(self, endpoint):
-        """Send the search query to Eventful"""
-        print ("Sending request: " + endpoint)
-        resp = requests.get(endpoint)
-
-        if (resp.status_code != 200):
-            print("Bad response from server. \n  Sent request: %s \n  Status code: %i" % (endpoint, resp.status_code))
-            print(resp.json())
-            return None
-        if not resp.ok:
-            print("Server response Not OK. \n  Sent request: %s \n  Status code: %i" % (endpoint, resp.status_code))
-            print(resp.json())
-            return None
-        if resp.headers.get('Content-length') == '0':
-            print ("No content from Eventful for request: " + endpoint)
-            return None
-        return resp.json()
-
-    def buildEvents(self, json_response):
-        for event_dict in json_response['events']['event']:
-            yield Event(event_dict)
-
     def generateListOfArtists(self):
         for event in self.upcomingEvents:
             self.artists.append(event.title)
             self.performers += event.performers
 
 class Event(object):
+
     def __init__(self, event_dict):
         self.url = event_dict['url']
         self.description = event_dict['description']
@@ -146,6 +170,6 @@ class Event(object):
         self.longitude = event_dict['longitude']
         self.date = event_dict['start_time']  # "2016-07-19 19:30:00"
         self.date = datetime.strptime(self.date, "%Y-%m-%d  %H:%M:%S")
+
     def __repr__(self):
         return "Title: %r \nVenue: %r" % (self.title, self.venue_name)
-
