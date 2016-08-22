@@ -5,7 +5,6 @@ musicThisWeek
 Nick Speal 2016
 """
 
-from collections import namedtuple
 from datetime import datetime
 import os
 import time
