@@ -86,7 +86,10 @@ def setup(request):
         print("ERROR: setup called without pc session. Redirecting home.")
         return HttpResponseRedirect('/')
 
-    context = pc.user_info
+    location = request.session.get('location')
+    if location is None:
+        location = 'San Francisco'
+    context = dict(pc.user_info, **{'location': location} )
     return render(request, 'music_this_week/setup.html', context)
 
 def search(request):
@@ -94,7 +97,7 @@ def search(request):
     # Parse request for search arguments
     search_args = dict(request.GET.items())
 
-    #Validate search arguments
+    # Validate search arguments
     if "location" not in search_args.keys() or "date" not in search_args.keys() or "nResults" not in search_args.keys():
         print("ERROR: Bad search arguments")
         print(search_args)
@@ -118,5 +121,8 @@ def search(request):
         resp = HttpResponse(error)
         resp.status_code = 400
         return resp
+
+    # Save user's search location as a cookie for next time
+    request.session['location'] = search_args.get('location')
 
     return HttpResponseRedirect(url)
