@@ -112,7 +112,7 @@ def search(request):
         return HttpResponseRedirect('/')
 
     # Main heavy lifting happens in the background
-    (url, error) = backend.execute(pc, search_args)
+    (context, error) = backend.execute(pc, search_args)
 
     # Save PlaylistCreator instance, just in case
     request.session['pc'] = pc
@@ -125,4 +125,4 @@ def search(request):
     # Save user's search location as a cookie for next time
     request.session['location'] = search_args.get('location')
 
-    return HttpResponseRedirect(url)
+    return render(request, 'music_this_week/playlist.html', context)

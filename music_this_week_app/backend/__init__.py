@@ -31,22 +31,27 @@ def execute(playlist_creator, search_args):
 
     # Validate and filter artists
     print("Searching for %i artists on Spotify..." % len(artists))
-    artist_URIs = searcher.filter_list_of_artists(artists)
-    if len(artist_URIs) == 0:
+    artist_uris = searcher.filter_list_of_artists(artists)
+    if len(artist_uris) == 0:
         return None, "No results found."
 
     # Create List of Songs (track URIs)
-    print ("%i artists found on Spotify. Creating a playlist..." % len(artist_URIs))
-    song_list = searcher.get_song_list(artist_URIs, N=99, order='shuffled')
+    print ("%i artists found on Spotify. Creating a playlist..." % len(artist_uris))
+    song_list = searcher.get_song_list(artist_uris, N=99, order='shuffled')
 
     # Get Playlist ID
-    playlistURL = playlist_creator.get_spotify_playlist("musicThisWeek")
+    (playlist_url, playlist_uri) = playlist_creator.get_spotify_playlist("musicThisWeek")
 
     # Populate Playlist
-    playlist_creator.erase(playlistURL)
-    playlist_creator.add(playlistURL, song_list)
+    playlist_creator.erase(playlist_url)
+    playlist_creator.add(playlist_url, song_list)
 
     print("\n\nSuccessfully Created a playlist! Give it a listen:")
-    print(playlistURL)
+    print(playlist_url)
 
-    return playlistURL, None
+    context = {
+        'playlist_url': playlist_url,
+        'embed_url': 'https://embed.spotify.com/?uri=%s' % playlist_uri,
+    }
+
+    return context, None

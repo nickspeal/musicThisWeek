@@ -249,11 +249,13 @@ class PlaylistCreator(object):
         users_playlists = self.sp.user_playlists(self.username)
         for playlist in users_playlists['items']:
             if playlist['name'] == title:
-                return playlist['external_urls']['spotify'] #Return URL not URI so that it can be passed to the user. playlist['uri'] also works.
+                # Return URL not URI so that it can be passed to the user. playlist['uri'] also works.
+                return playlist['external_urls']['spotify'], playlist['uri']
 
         # Create new playlist if needed
         playlist = self.sp.user_playlist_create(self.username, title)
-        return playlist['external_urls']['spotify'] #Return URL not URI so that it can be passed to the user. playlist['uri'] also works.
+        # Return URL not URI so that it can be passed to the user. playlist['uri'] also works.
+        return playlist['external_urls']['spotify'], playlist['uri']
 
     def erase(self, playlist):
         """
