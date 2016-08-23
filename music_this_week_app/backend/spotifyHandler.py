@@ -10,7 +10,7 @@ import spotipy
 import spotipy.util as util
 from spotipy import oauth2 # for login
 from random import shuffle
-
+from music_this_week_app.models import Artist
 import os
 
 VERBOSE = False
@@ -29,7 +29,6 @@ class SpotifySearcher(object):
         :param unfiltered_artists: list of strings of artist names
         :return artistURIs: list of strings of verified Spotify artist identifiers
         """
-
         artistURIs = [self.filter_artist(a) for a in unfiltered_artists]
         artistURIs = [a for a in artistURIs if a is not None]
         if VERBOSE:
@@ -43,8 +42,14 @@ class SpotifySearcher(object):
         :param artist_name: string
         :return artistURI: Verified Spotify artist identifier. Return None if no match
         """
+        try:
+            artist_entry = Artist.objects.get(name = artist_name)
+            return artist_entry.spotify_uri
+        except Artist.DoesNotExist:
+            pass 
+               
         if VERBOSE:
-            print ("\nSearching for artist: " + artist_name)
+            print ("\nSearching for artist on Spotify: " + artist_name)
         try:
             result = self.sp.search(q='artist:' + artist_name, type='artist')
         except spotipy.client.SpotifyException:
@@ -55,10 +60,12 @@ class SpotifySearcher(object):
             except spotipy.client.SpotifyException as error:
                 print("ERROR: Failed to search twice. Error below:")
                 print(error)
+                self.save_new_artist(artist_name, None)
                 return None
         except ValueError as error:
             print("ERROR: Failure while searching Spotify for artist: %s" % artist_name)
             print(error)
+            self.save_new_artist(artist_name, None)
             return None
 
         artists = result['artists']['items']  # list of dicts
@@ -76,7 +83,9 @@ class SpotifySearcher(object):
                     print ("Exact match!")
                 else:
                     print ("Close enough...")
-            return artists[0]['uri']
+            artist_uri = artists[0]['uri']
+            self.save_new_artist(artist_name, artist_uri)
+            return artist_uri 
 
         elif num_matches > 1:
             if VERBOSE:
@@ -86,12 +95,27 @@ class SpotifySearcher(object):
                 if a['name'] == artist_name:
                     if VERBOSE:
                         print("Exact match found!")
-                    return a['uri']
+                    artist_uri = a['uri']
+                    self.save_new_artist(artist_name, artist_uri)
+                    return artist_uri 
             # If there is no exact match, the first match is probably best.
-            return artists[0]['uri']
+            artist_uri = artists[0]['uri']           
+            self.save_new_artist(artist_name, artist_uri)
+            return artist_uri 
 
         # If we don't return in one of the If statements above, abort
         raise Exception('unexpected number of matches (%i) for artist %s' % (num_matches, artist))
+
+    def save_new_artist(self, artist_name, artist_uri):
+        """
+        saves artist name/uri pairs t DB
+        :param artist_name:
+        :param artist_uri:
+        :return None:
+        """
+        
+        artist = Artist.objects.get_or_create(spotify_uri = artist_uri, name = artist_name)
+        print("saved %s to DB" % artist_name) 
 
     def get_song_list(self, artist_URIs, N=99, order="shuffled"):
         """
