@@ -55,9 +55,10 @@ class EventFinder(object):
         self.searchArgs = {}
         self.upcomingEvents = [] #A list of Event objects
 
-    def get_total_pages_to_search(self, search_args):
+    @staticmethod
+    def get_total_pages_to_search(search_args):
         """ Check the result count for the desired search args """
-        url = self.assembleRequest(search_args, pageNum=1, count_only=True)
+        url = EventFinder.assembleRequest(search_args, pageNum=1, count_only=True)
 
         start_ms = time_ms()
         print('Request to %s' % url)
@@ -74,11 +75,14 @@ class EventFinder(object):
 
         return total_events / EVENTFUL_RESULTS_PER_PAGE + 1
 
-    def store_events(self, responses, total_pages):
+    @staticmethod
+    def parse_events(responses, total_pages):
+        """ Returns a list of events parsed from the eventful API """
+        events = []
         for page, response in enumerate(responses, start=1):
-            url = response.url
             if not request_was_successful(response):
-                break
+                print('WARNING: Skipping failed request to crawl page %d' % page)
+                continue
             if page > total_pages:
                 break
             json = response.json()
@@ -86,8 +90,8 @@ class EventFinder(object):
                 print("ERROR: No eventful results for page %d" % page)
             else:
                 # parse the events into a list of Event objects
-                events = map(Event, json['events']['event'])
-                self.upcomingEvents.extend(events)
+                events.extend(map(Event, json['events']['event']))
+        return events
 
     def searchForEvents(self, search_args):
         """
@@ -107,12 +111,14 @@ class EventFinder(object):
         responses = grequests.map(grequests.get(u) for u in urls)
         print('Crawling took ' + str(time_ms() - start_ms) + ' ms')
 
-        self.store_events(responses, pages)
+        events = self.parse_events(responses, pages)
+        self.upcomingEvents.extend(events)
 
         print ("Done searching for events. Saved %i events matching the search query" % len(self.upcomingEvents) )
         self.generateListOfArtists()
 
-    def assembleRequest(self, searchArgs, pageNum, count_only = False):
+    @staticmethod
+    def assembleRequest(searchArgs, pageNum, count_only=False):
         '''Receives search parameters and returns a URL for the endpoint'''
 
         filters = [ '',
