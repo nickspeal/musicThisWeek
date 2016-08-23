@@ -8,6 +8,7 @@ Nick Speal 2016
 import requests
 import os
 from datetime import datetime
+import re
 
 EVENTFUL_RESULTS_PER_PAGE = 50  # (I think it is max 100, default 20)
 
@@ -70,24 +71,35 @@ class EventFinder(object):
         self.generateListOfArtists()
 
     def assembleRequest(self, searchArgs, pageNum, count_only = False):
-        '''Receives search parameters and returns a URL for the endpoint'''
+        """
+        Receives search parameters and returns a URL for the endpoint
 
+        :param searchArgs: Dictionary of eventful search arguements
+        :param pageNum: Eventful page number
+        :param count_only: Flag for returning all results or just the number of results
+        :return URL: Eventful endpoint with the appropriate parameters
+        """
         filters = [ '',
                     'category=music', #seems to return the same results for music or concerts, so this might be unnecessary
                     'location=%s' %searchArgs['location'],
-                    'date=%s' %searchArgs['date'],
+                    'date=%s' %self.parseDate(searchArgs['start'], searchArgs['end']),
                     'page_size=%s' %EVENTFUL_RESULTS_PER_PAGE,
                     'page_number=%s' %pageNum,
                     'sort_order=popularity' #Customer Support says this should work but I see no evidence of it working
                    ]
         filterString = '&'.join(filters + ['count_only=true'] if count_only else filters)
-
-
         baseURL = 'http://api.eventful.com/json/events/search?app_key=%s' % EVENTFUL_KEY
-
         URL = baseURL + filterString
-
         return URL
+
+    def parseDate(self, start, end):
+        """
+        Converts the start and end dates from the HTML widget into eventful format
+        :param start: String, search range start date with format YYYY-MM-DD
+        :param end: String, search range end date with format YYYY-MM-DD
+        :return parsedDate: String, search range with format YYYYMMDD00-YYYYMMDD00
+        """
+        return re.sub('-', '', start) + '00-' + re.sub('-','', end) + '00'
 
     def sendRequest(self, endpoint):
         """Send the search query to Eventful"""
