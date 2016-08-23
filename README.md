@@ -25,43 +25,78 @@ Nick Speal 2016. All rights reserved.
 
 ## Dependencies
 
-Requests (2.9.1)
+requests (2.9.1)
 
-[Spotipy](https://spotipy.readthedocs.io/en/latest/)
+[spotipy](https://spotipy.readthedocs.io/en/latest/) (2.3.8)
 
-Django (1.9.7)
+django (1.9.7)
 
-## Instructions
+grequests (0.3.0)
 
-1. Install dependencies
+## Setup Instructions
 
-	~~~~
-	pip install requests
+0. Create a virtual environment for your project.
 
-	pip install spotipy
+    To keep your pip installation clean, we recommend using [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/en/latest/).
 
-	pip install Django
-	~~~~
+    ~~~~
+    $ mkvirtualenv mtw
+    ~~~~
 
-2. create a config file called spotipyCreds.sh:
+    Anytime you want to run this project, run:
 
-	~~~~
-	export SPOTIPY_CLIENT_ID='ask me for the client ID'
+    ~~~~
+    $ workon mtw
+    ~~~~
 
-	export SPOTIPY_CLIENT_SECRET='ask me for the secret'
+1. Install dependencies in your virtualenv from the root of the repo.
 
-	export SPOTIPY_REDIRECT_URI='http://localhost:8888/callback'
+    ~~~~
+    $ pip install -r requirements.txt 
+    ~~~~
 
-	export DJANGO_SECRET_KEY='ask me'
+2. Create a config file called spotipyCreds.sh under a directory under the root called '_private':
 
-    export EVENTFUL_KEY='ask me'
-	~~~~
+    ~~~~
+    $ mkdir -p _private
+    $ echo "
+    export SPOTIPY_CLIENT_ID='ask @nickspeal for the client ID'
+    export SPOTIPY_CLIENT_SECRET='ask @nickspeal for the secret'
+    export SPOTIPY_REDIRECT_URI='http://localhost:8888/callback'
+    export DJANGO_SECRET_KEY='ask @nickspeal'
+    export EVENTFUL_KEY='ask @nickspeal'
+    " > _private/spotipyCreds.sh
+    ~~~~
 
-3. `sh run.sh` This will source the above file, start the server, and open a browser for you!
+3. Source the private credentials you just wrote:
 
-4. Follow instructions in the browser
+    ~~~~
+    $ source _private/spotipyCreds.sh
+    ~~~~
 
-5. Play the playlist in the browser or find it automatically ready in the Spotify app
+3. Run the Django database migration script:
+
+    ~~~~
+    $ python manage.py migrate
+    ~~~~
+
+4. Run the server by following the instructions in the next section:
+
+## Running Instructions
+
+1. Run `sh run.sh` from the root of the repo in your project's virtualenv.
+
+    (Prereq: Make sure you already ran the setup instructions at some previous point.)
+
+    ~~~~
+    $ sh run.sh
+    ~~~~
+
+    This will source the credentials file, start the server, and open a browser for you!
+
+2. Follow instructions in the browser
+
+3. Play the playlist in the browser or find it automatically ready in the Spotify app.
  
 
 # Documentation
