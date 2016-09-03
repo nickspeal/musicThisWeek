@@ -44,16 +44,15 @@ class SpotifySearcher(object):
         """
         try:
             artist_entry = Artist.objects.get(name = artist_name)
-            return artist_entry.spotify_uri
-        except Artist.DoesNotExist:
-            pass 
-        result =  self.search_spotify(artist_name)
-        #check that searching spotify returned something 
-        if result is not None:
-            artist_URI = self.filter_spotify_result(result, artist_name)
-        #otherwise set the artist URI to return to None 
-        else:
-            artist_URI = None
+            artist_URI = artist_entry.spotify_uri
+        except Artist.DoesNotExist: 
+            result =  self.search_spotify(artist_name)
+            #check that searching spotify returned something 
+            if result is not None:
+                artist_URI = self.filter_spotify_result(result, artist_name)
+            #otherwise set the artist URI to return to None 
+            else:
+                artist_URI = None
         return artist_URI
 
     def search_spotify(self, artist_name):
