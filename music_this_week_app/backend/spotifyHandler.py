@@ -42,15 +42,18 @@ class SpotifySearcher(object):
         :param artist_name: string
         :return artistURI: Verified Spotify artist identifier. Return None if no match
         """
+        # Check if the artist is in the database
         try:
             artist_entry = Artist.objects.get(name = artist_name)
             artist_URI = artist_entry.spotify_uri
-        except Artist.DoesNotExist: 
+
+        # If the artist isn't in the database, search Spotify
+        except Artist.DoesNotExist:
             result =  self.search_spotify(artist_name)
-            #check that searching spotify returned something 
+            # Check that searching spotify returned something
             if result is not None:
                 artist_URI = self.filter_spotify_result(result, artist_name)
-            #otherwise set the artist URI to return to None 
+            # Otherwise set the artist URI to return to None
             else:
                 artist_URI = None
         return artist_URI
