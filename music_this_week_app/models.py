@@ -6,7 +6,7 @@ from django.db import models
 
 class Artist(models.Model):
     name = models.CharField(max_length = 50, primary_key = True)
-    spotify_uri = models.CharField(max_length = 100)
+    spotify_uri = models.CharField(max_length = 100, blank = True)
 
     def __str(self):
         return self.spotify_uri
