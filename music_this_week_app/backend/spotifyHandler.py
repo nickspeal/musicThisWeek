@@ -61,6 +61,9 @@ class SpotifySearcher(object):
             else:
                 artist_uri = None
 
+            # Save artist URI to the database for faster results next time
+            self.save_new_artist(artist_name, artist_uri)
+
         return artist_uri
 
     def search_spotify(self, artist_name):
@@ -133,11 +136,7 @@ class SpotifySearcher(object):
             # If there is no exact match, the first match is probably best.
             if no_match_found:
                 artist_uri = artists[0]['uri']           
-        
-        self.save_new_artist(artist_name, artist_uri)
         return artist_uri 
-
-
 
 
     def save_new_artist(self, artist_name, artist_uri):
