@@ -115,6 +115,7 @@ class SpotifySearcher(object):
         """
         
         artist = Artist.objects.get_or_create(spotify_uri = artist_uri, name = artist_name)
+        artist.save()
 
     def get_song_list(self, artist_URIs, N=99, order="shuffled"):
         """
