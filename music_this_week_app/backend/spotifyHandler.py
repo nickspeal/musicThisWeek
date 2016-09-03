@@ -124,30 +124,31 @@ class SpotifySearcher(object):
         elif num_matches > 1:
             if VERBOSE:
                 print ("%i matches found: " % num_matches + str([a['name'] for a in artists]) )
+
             # check for exact match
+            no_exact_match = True
             for a in artists:
-                no_match_found =True 
                 if a['name'] == artist_name:
                     if VERBOSE:
                         print("Exact match found!")
                     artist_uri = a['uri']
-                    no_match_found = False
+                    no_exact_match = False
                     break
             # If there is no exact match, the first match is probably best.
-            if no_match_found:
+            if no_exact_match:
                 artist_uri = artists[0]['uri']           
-        return artist_uri 
 
+        return artist_uri
 
     def save_new_artist(self, artist_name, artist_uri):
         """
-        saves artist name/uri pairs t DB
+        saves artist name/uri pairs to DB
         :param artist_name: String
         :param artist_uri: String
         :return None:
         """
         
-        Artist.objects.get_or_create(spotify_uri = artist_uri, name = artist_name)
+        Artist.objects.get_or_create(spotify_uri=artist_uri, name=artist_name)
 
     def get_song_list(self, artist_URIs, N=99, order="shuffled"):
         """
