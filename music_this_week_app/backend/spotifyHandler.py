@@ -104,8 +104,6 @@ class SpotifySearcher(object):
         artists = result['artists']['items']  # list of dicts
 
         num_matches = int(result['artists']['total'])
-        if not type(num_matches)== int:
-            raise Exception('unexpected number of matches (%i) for artist %s' % (num_matches, artist))
         if num_matches == 0:
             if VERBOSE:
                 print("No matches found!")
