@@ -98,7 +98,6 @@ class SpotifySearcher(object):
         if num_matches == 0:
             if VERBOSE:
                 print( "No matches found!")
-                self.save_new_artist(artist_name, None)
             artist_uri = None
 
         elif num_matches == 1:
@@ -109,7 +108,6 @@ class SpotifySearcher(object):
                 else:
                     print ("Close enough...")
             artist_uri = artists[0]['uri']
-            self.save_new_artist(artist_name, artist_uri)
 
         elif num_matches > 1:
             if VERBOSE:
@@ -121,13 +119,13 @@ class SpotifySearcher(object):
                     if VERBOSE:
                         print("Exact match found!")
                     artist_uri = a['uri']
-                    self.save_new_artist(artist_name, artist_uri)
                     no_match_found = False
                     break
             # If there is no exact match, the first match is probably best.
             if no_match_found:
                 artist_uri = artists[0]['uri']           
-                self.save_new_artist(artist_name, artist_uri)
+        
+        self.save_new_artist(artist_name, artist_uri)
         return artist_uri 
 
 
