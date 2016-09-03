@@ -24,11 +24,13 @@ class SpotifySearcher(object):
 
     def filter_list_of_artists(self, unfiltered_artists):
         """
-        Turn a list of potential aritst names into a list or spotify artist URIs
+        Turn a list of potential artist names into a list of Spotify artist URIs
+        Filter out artists that cannot be found from the list.
 
         :param unfiltered_artists: list of strings of artist names
         :return artistURIs: list of strings of verified Spotify artist identifiers
         """
+
         artistURIs = [self.filter_artist(a) for a in unfiltered_artists]
         artistURIs = [a for a in artistURIs if a is not None]
         if VERBOSE:
@@ -37,41 +39,47 @@ class SpotifySearcher(object):
 
     def filter_artist(self, artist_name):
         """
-        Matches an artist name to an Artist URI on Spotify
+        Matches an artist name to a Spotify Artist URI
+        First checks the local database for a match and searches Spotify otherwise
 
         :param artist_name: string
         :return artistURI: Verified Spotify artist identifier. Return None if no match
         """
+
         # Check if the artist is in the database
         try:
             artist_entry = Artist.objects.get(name = artist_name)
-            artist_URI = artist_entry.spotify_uri
+            artist_uri = artist_entry.spotify_uri
 
         # If the artist isn't in the database, search Spotify
         except Artist.DoesNotExist:
-            result =  self.search_spotify(artist_name)
-            # Check that searching spotify returned something
+            result = self.search_spotify(artist_name)
+
+            # If there were any errors searching Spotify, don't continue
             if result is not None:
-                artist_URI = self.filter_spotify_result(result, artist_name)
-            # Otherwise set the artist URI to return to None
+                artist_uri = self.filter_spotify_result(result, artist_name)
             else:
-                artist_URI = None
-        return artist_URI
+                artist_uri = None
+
+        return artist_uri
 
     def search_spotify(self, artist_name):
         """
-        Searches spotify for artist and handles exceptions
+        Searches Spotify for an artist name and handles exceptions
+
+        The Spotify result is a JSON object containing an array of artist objects called 'items'
+        More info: https://developer.spotify.com/web-api/search-item/
+
 
         :param artist_name: string
-        :return: response from spotify API or None if exception is raised
+        :return: Spotify result or None if an exception is raised.
         """   
         if VERBOSE:
             print ("\nSearching for artist on Spotify: " + artist_name)
         try:
             result = self.sp.search(q='artist:' + artist_name, type='artist')
         except spotipy.client.SpotifyException:
-            print("ERROR: Couldnt not find artist: %s" % artist_name)
-            print("trying again")
+            print("ERROR: Couldnt not find artist: %s. Trying again." % artist_name)
             try:
                 result = self.sp.search(q='artist:' + artist_name, type='artist')
             except spotipy.client.SpotifyException as error:
@@ -86,9 +94,10 @@ class SpotifySearcher(object):
 
     def filter_spotify_result(self, result, artist_name):
         """
-        Takes a valid response from the spotify api and returns an artist URI or None if response is size 0, saves artist_URI or None in database
+        Given a Spotify result, which can contain multiple artists matching a search query,
+        identify and return the URI for the artist that best matches the query.
 
-        :param result: A response from spotify API
+        :param result: A result from Spotify API. More info: https://developer.spotify.com/web-api/search-item/
         :param artist_name: String
         :return artist_uri: String or None, the best artist_URI found or None if no artists in results
         """
@@ -99,7 +108,7 @@ class SpotifySearcher(object):
             raise Exception('unexpected number of matches (%i) for artist %s' % (num_matches, artist))
         if num_matches == 0:
             if VERBOSE:
-                print( "No matches found!")
+                print("No matches found!")
             artist_uri = None
 
         elif num_matches == 1:
