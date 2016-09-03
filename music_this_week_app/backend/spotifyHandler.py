@@ -47,7 +47,22 @@ class SpotifySearcher(object):
             return artist_entry.spotify_uri
         except Artist.DoesNotExist:
             pass 
-               
+        result =  self.search_spotify(artist_name)
+        #check that searching spotify returned something 
+        if result is not None:
+            artist_URI = self.filter_spotify_result(result, artist_name)
+        #otherwise set the artist URI to return to None 
+        else:
+            artist_URI = None
+        return artist_URI
+
+    def search_spotify(self, artist_name):
+        """
+        Searches spotify for artist and handles exceptions
+
+        :param artist_name: string
+        :return: response from spotify API or None if exception is raised
+        """   
         if VERBOSE:
             print ("\nSearching for artist on Spotify: " + artist_name)
         try:
@@ -60,21 +75,31 @@ class SpotifySearcher(object):
             except spotipy.client.SpotifyException as error:
                 print("ERROR: Failed to search twice. Error below:")
                 print(error)
-                self.save_new_artist(artist_name, None)
-                return None
+                result = None
         except ValueError as error:
             print("ERROR: Failure while searching Spotify for artist: %s" % artist_name)
             print(error)
-            self.save_new_artist(artist_name, None)
-            return None
+            result = None
+        return result
 
+    def filter_spotify_result(self, result, artist_name):
+        """
+        Takes a valid response from the spotify api and returns an artist URI or None if response is size 0, saves artist_URI or None in database
+
+        :param result: A response from spotify API
+        :param artist_name: String
+        :return artist_uri: String or None, the best artist_URI found or None if no artists in results
+        """
         artists = result['artists']['items']  # list of dicts
 
         num_matches = int(result['artists']['total'])
+        if not type(num_matches)== int:
+            raise Exception('unexpected number of matches (%i) for artist %s' % (num_matches, artist))
         if num_matches == 0:
             if VERBOSE:
                 print( "No matches found!")
-            return None
+                self.save_new_artist(artist_name, None)
+            artist_uri = None
 
         elif num_matches == 1:
             if VERBOSE:
@@ -85,37 +110,38 @@ class SpotifySearcher(object):
                     print ("Close enough...")
             artist_uri = artists[0]['uri']
             self.save_new_artist(artist_name, artist_uri)
-            return artist_uri 
 
         elif num_matches > 1:
             if VERBOSE:
                 print ("%i matches found: " % num_matches + str([a['name'] for a in artists]) )
             # check for exact match
             for a in artists:
+                no_match_found =True 
                 if a['name'] == artist_name:
                     if VERBOSE:
                         print("Exact match found!")
                     artist_uri = a['uri']
                     self.save_new_artist(artist_name, artist_uri)
-                    return artist_uri 
+                    no_match_found = False
+                    break
             # If there is no exact match, the first match is probably best.
-            artist_uri = artists[0]['uri']           
-            self.save_new_artist(artist_name, artist_uri)
-            return artist_uri 
+            if no_match_found:
+                artist_uri = artists[0]['uri']           
+                self.save_new_artist(artist_name, artist_uri)
+        return artist_uri 
 
-        # If we don't return in one of the If statements above, abort
-        raise Exception('unexpected number of matches (%i) for artist %s' % (num_matches, artist))
+
+
 
     def save_new_artist(self, artist_name, artist_uri):
         """
         saves artist name/uri pairs t DB
-        :param artist_name:
-        :param artist_uri:
+        :param artist_name: String
+        :param artist_uri: String
         :return None:
         """
         
-        artist = Artist.objects.get_or_create(spotify_uri = artist_uri, name = artist_name)
-        artist.save()
+        Artist.objects.get_or_create(spotify_uri = artist_uri, name = artist_name)
 
     def get_song_list(self, artist_URIs, N=99, order="shuffled"):
         """
