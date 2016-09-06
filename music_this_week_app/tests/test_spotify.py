@@ -254,3 +254,9 @@ class test_cache_artists(TestCase):
         self.assertEqual(Artist.objects.count(), 0)
         self.searcher.filter_list_of_artists(['asdfasdf'])
         self.assertEqual(Artist.objects.get(name  = 'asdfasdf').spotify_uri, None)
+
+
+    def test_uri_saved_correctly(self):
+        self.assertEqual(Artist.objects.count(), 0)
+        returned_artist_uri = self.searcher.filter_artist('Kanye West')
+        self.assertEqual(Artist.objects.get(name = 'Kanye West').spotify_uri, returned_artist_uri)
