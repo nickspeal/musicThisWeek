@@ -260,3 +260,14 @@ class test_cache_artists(TestCase):
         self.assertEqual(Artist.objects.count(), 0)
         returned_artist_uri = self.searcher.filter_artist('Kanye West')
         self.assertEqual(Artist.objects.get(name = 'Kanye West').spotify_uri, returned_artist_uri)
+
+    def test_repeat_not_saved(self):
+        self.assertEqual(Artist.objects.count(), 0)
+        self.searcher.filter_list_of_artists(['Elvis Presley', 'Bon Iver', 'Kendrick Lamar'])
+        self.searcher.filter_list_of_artists(['Elvis Presley', 'Bon Iver', 'Kanye West'])
+        self.assertEqual(Artist.objects.count(), 4)
+        #this should make a new row for "Kanye" because lookup in DB cannot handle variant spellings
+        self.searcher.filter_list_of_artists(['Elvis Presley', 'Bon Iver', 'Kanye'])
+        self.assertEqual(Artist.objects.count(), 5)
+         
+
