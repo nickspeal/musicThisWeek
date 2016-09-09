@@ -13,7 +13,8 @@ After a playlist is created, it redirects to the playlist URL
 
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
-
+from django.contrib.gis.geoip2 import GeoIP2
+from geoip2.errors import AddressNotFoundError
 import backend
 from backend.spotifyHandler import PlaylistCreator
 
@@ -79,14 +80,25 @@ def callback(request):
 
 def setup(request):
     """Displays search args and a search button, which links to /search"""
-
+    #get user ip address to find user location 
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    #handle invalid IP or ip == 127.0.0.1 because running locally 
+    try:
+        g = GeoIP2()
+        location = g.city(ip)
+    except AddressNotFoundError:
+        location = {'city' : "San Francisco"}
     # Fetch user data
     pc = request.session.get('pc')
     if pc is None:
         print("ERROR: setup called without pc session. Redirecting home.")
         return HttpResponseRedirect('/')
 
-    context = pc.user_info
+    context = dict(pc.user_info, **{'location' : location['city']}) 
     return render(request, 'music_this_week/setup.html', context)
 
 def search(request):
