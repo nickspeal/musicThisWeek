@@ -105,9 +105,10 @@ def search(request):
     """ Search for shows and create playlist then redirect to it"""
     # Parse request for search arguments
     search_args = dict(request.GET.items())
-
+    print(search_args)
     #Validate search arguments
-    if "location" not in search_args.keys() or "date" not in search_args.keys() or "nResults" not in search_args.keys():
+    keys = search_args.keys()
+    if ("location" not in keys and ("hidden_lat" not in keys or "hidden_lon" not in keys)) or "date" not in keys or "nResults" not in keys:
         print("ERROR: Bad search arguments")
         print(search_args)
         resp = HttpResponse("Bad Search Arguments")

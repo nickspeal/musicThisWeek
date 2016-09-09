@@ -14,6 +14,8 @@
         <form action="/search" id="form">
             <p><strong>Location:</strong> <input id = "loc_field" type="text" name="location" value="{{location}}"> <input type = "checkbox" onchange = "checkBox.call(this)"> Use my current location </p>
             <p><strong>Time range:</strong> <input id = "date_field" type="text" name="date" value="Next 7 Days"></p>
+            <p><input id = "hidden_lat" hidden = true name = "hidden_lat"></p>
+            <p><input id = "hidden_lon" hidden = true name = "hidden_lon"></p>
             <input hidden=true name="nResults" value="200">
             <button type="submit" id="search-button" onclick="buttonClick(this.form)">Search</button>
         </form>
@@ -36,6 +38,13 @@
         if (userLocation === null){
             getUserLocation();
             }
+        var loc_field = document.getElementById('loc_field');
+        if (loc_field.hidden){
+            loc_field.hidden = false;
+            }
+        else{
+            loc_field.hidden = true;
+            }
         }
        
         function getUserLocation(){
@@ -47,8 +56,11 @@
         }
 
         function locationProvided(position) {
-            var lat = position.coords.latitude;
-            var lon = position.coords.longitude;
+            var lat = position.coords.latitude.toString();
+            var lon = position.coords.longitude.toString();
+            document.getElementById('hidden_lat').value = lat;
+            document.getElementById('hidden_lon').value = lon;
+            
 	}
  
         function locationError(error){

@@ -12,8 +12,11 @@ from datetime import datetime
 EVENTFUL_RESULTS_PER_PAGE = 50  # (I think it is max 100, default 20)
 
 EVENTFUL_KEY = os.getenv('EVENTFUL_KEY')
+
 if not EVENTFUL_KEY:
     raise Exception("Bad Eventful Key: " + str(EVENTFUL_KEY))
+
+SEARCH_RADIUS = 10
 
 class EventFinder(object):
     def __init__(self):
@@ -71,17 +74,24 @@ class EventFinder(object):
 
     def assembleRequest(self, searchArgs, pageNum, count_only = False):
         '''Receives search parameters and returns a URL for the endpoint'''
-
+        if (searchArgs['hidden_lat'] == ''):
+            location = searchArgs['location']
+            within = None
+        else:
+            location = searchArgs['hidden_lat'] + ", " + searchArgs['hidden_lon'] 
+            within = SEARCH_RADIUS
+        
         filters = [ '',
                     'category=music', #seems to return the same results for music or concerts, so this might be unnecessary
-                    'location=%s' %searchArgs['location'],
+                    'location=%s' %location,
                     'date=%s' %searchArgs['date'],
                     'page_size=%s' %EVENTFUL_RESULTS_PER_PAGE,
                     'page_number=%s' %pageNum,
                     'sort_order=popularity' #Customer Support says this should work but I see no evidence of it working
                    ]
+        if not (within == None):
+            filters.append('within=%s'  %within)
         filterString = '&'.join(filters + ['count_only=true'] if count_only else filters)
-
 
         baseURL = 'http://api.eventful.com/json/events/search?app_key=%s' % EVENTFUL_KEY
 
