@@ -13,7 +13,7 @@
         <p><span style="text-decoration: underline;">Search Arguments:</span></p>
         <form action="/search" id="form">
             <p><strong>Location:</strong> <input id = "loc_field" type="text" name="location" value="{{location}}"> 
-               <input type = "checkbox" name = "latlng_checkbox" onchange = "checkBox.call(this)"> Use my current location </p>
+               <input type = "checkbox" id = "latlng_checkbox" name = "latlng_checkbox" onchange = "checkBox.call(this)"> Use my current location </p>
             <p><strong>Time range:</strong> <input id = "date_field" type="text" name="date" value="Next 7 Days"></p>
             <p><input id = "hidden_lat" hidden = true name = "hidden_lat"></p>
             <p><input id = "hidden_lon" hidden = true name = "hidden_lon"></p>
@@ -34,9 +34,10 @@
             form.submit();
         }
         function checkBox(){
+        document.getElementById('search-button').disabled = "True";
         console.log("box checked");
         console.log(userLocation);
-        if (userLocation === null){
+        if ((userLocation === null)  && (document.getElementById('latlng_checkbox').checked == true )){
             getUserLocation();
             }
         var loc_field = document.getElementById('loc_field');
@@ -47,25 +48,29 @@
             loc_field.hidden = true;
             }
         }
-       
-        function getUserLocation(){
-            console.log("getting user location");
-            navigator.geolocation.getCurrentPosition(
-                locationProvided, locationError);
-
-
-        }
 
         function locationProvided(position) {
             var lat = position.coords.latitude.toString();
             var lon = position.coords.longitude.toString();
             document.getElementById('hidden_lat').value = lat;
             document.getElementById('hidden_lon').value = lon;
+                        
+            document.getElementById('search-button').disabled = false;
             
 	}
  
         function locationError(error){
             console.log("error");
+            document.getElementById('latlng_checkbox').checked = false;
+            document.getElementById('search-button').disabled = false;
+        }
+ 
+        function getUserLocation(){
+            console.log("getting user location");
+            navigator.geolocation.getCurrentPosition(
+                locationProvided, locationError);
+
+
         }
 
 
