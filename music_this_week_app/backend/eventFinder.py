@@ -74,12 +74,13 @@ class EventFinder(object):
 
     def assembleRequest(self, searchArgs, pageNum, count_only = False):
         '''Receives search parameters and returns a URL for the endpoint'''
-        if (searchArgs['hidden_lat'] == ''):
-            location = searchArgs['location']
-            within = None
-        else:
+        #if the box is checked use latlng method, otherwise use entered city 
+        if 'latlng_checkbox' in searchArgs and searchArgs['latlng_checkbox'] == 'on':
             location = searchArgs['hidden_lat'] + ", " + searchArgs['hidden_lon'] 
             within = SEARCH_RADIUS
+        else:
+            location = searchArgs['location']
+            within = None
         
         filters = [ '',
                     'category=music', #seems to return the same results for music or concerts, so this might be unnecessary
