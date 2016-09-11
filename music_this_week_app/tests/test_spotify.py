@@ -3,6 +3,7 @@ from django.test import TestCase
 
 
 import music_this_week_app.backend.spotifyHandler as spotifyHandler
+from music_this_week_app.models import Artist
 
 class test_filter_list_of_artists(TestCase):
     """
@@ -239,3 +240,40 @@ class test_mess_with_playlists(TestCase):
         self.pc.add(self.playlist_url, song_list)
         response = self.pc.sp.user_playlist(self.username, self.playlist_url)
         # Not sure how to get number of items from this...
+
+class test_cache_artists(TestCase):
+    def setUp(self):
+        self.searcher = spotifyHandler.SpotifySearcher()
+
+    def test_add_artist(self):
+        self.assertEqual(Artist.objects.count(), 0)
+        self.searcher.filter_list_of_artists(['Elvis Presley', 'Bon Iver', 'Kendrick Lamar'])
+        self.assertEqual(Artist.objects.count(), 3)
+
+    def test_add_fake_artist(self):
+        self.assertEqual(Artist.objects.count(), 0)
+        self.searcher.filter_list_of_artists(['asdfasdf'])
+        self.assertEqual(Artist.objects.get(name  = 'asdfasdf').spotify_uri, None)
+
+
+    def test_uri_saved_correctly(self):
+        self.assertEqual(Artist.objects.count(), 0)
+        returned_artist_uri = self.searcher.filter_artist('Kanye West')
+        self.assertEqual(Artist.objects.get(name = 'Kanye West').spotify_uri, returned_artist_uri)
+
+    def test_duplicate_names_not_saved(self):
+        self.assertEqual(Artist.objects.count(), 0)
+        self.searcher.filter_list_of_artists(['Elvis Presley', 'Bon Iver', 'Kendrick Lamar'])
+        self.assertEqual(Artist.objects.count(), 3)
+        self.searcher.filter_list_of_artists(['Elvis Presley', 'Bon Iver', 'Kanye West'])
+        self.assertEqual(Artist.objects.count(), 4)
+
+    def test_variant_spellings_both_saved(self):
+        self.assertEqual(Artist.objects.count(), 0)
+        self.searcher.filter_list_of_artists(['Kanye West'])
+        self.assertEqual(Artist.objects.count(), 1)
+        #this should make a new row for "Kanye" because lookup in DB cannot handle variant spellings
+        self.searcher.filter_list_of_artists(['Kanye'])
+        self.assertEqual(Artist.objects.count(), 2)
+         
+

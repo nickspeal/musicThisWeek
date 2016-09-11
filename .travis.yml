@@ -4,7 +4,11 @@ python:
   # - "3.4"
   # - "3.5"
 before_install: openssl aes-256-cbc -K $encrypted_2114ab58a3d9_key -iv $encrypted_2114ab58a3d9_iv -in .cache-nickspeal_test.enc -out .cache-nickspeal_test -d
-install: pip install -r requirements.txt
+install:
+  pip install -r requirements.txt &&
+  python manage.py makemigrations music_this_week_app &&
+  python manage.py migrate
+
 env:
   global:
     - SPOTIPY_REDIRECT_URI='http://localhost:8888/callback'
