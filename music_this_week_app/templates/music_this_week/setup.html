@@ -24,7 +24,7 @@
         <p id="wait-text" hidden="True">Please be patient. In few minutes a playlist called musicThisWeek will appear in your spotify app.<br><br>If you close this page, the playlist will still be created in the background.</p>
     </div>
     <script>
-        //init a variable that will contain user lat lng if checkbox clicked
+        //init a variable that will be true if checkbox clicked and user approves location request
         var userLocationProvided = false;
         //When Search button is pressed, change the UI and then submit the request.
         function buttonClick(form) {
@@ -66,7 +66,7 @@
             document.getElementById('hidden_lat').value = lat;
             document.getElementById('hidden_lon').value = lon;
             document.getElementById('latlng_checkbox').checked = true;
-            //update global bool so location only requested 
+            //update global bool so location not requested after user accepts
             userLocationProvided = true; 
 	}
  
