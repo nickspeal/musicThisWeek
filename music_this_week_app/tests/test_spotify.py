@@ -264,10 +264,16 @@ class test_cache_artists(TestCase):
     def test_duplicate_names_not_saved(self):
         self.assertEqual(Artist.objects.count(), 0)
         self.searcher.filter_list_of_artists(['Elvis Presley', 'Bon Iver', 'Kendrick Lamar'])
+        self.assertEqual(Artist.objects.count(), 3)
         self.searcher.filter_list_of_artists(['Elvis Presley', 'Bon Iver', 'Kanye West'])
         self.assertEqual(Artist.objects.count(), 4)
+
+    def test_variant_spellings_both_saved(self):
+        self.assertEqual(Artist.objects.count(), 0)
+        self.searcher.filter_list_of_artists(['Kanye West'])
+        self.assertEqual(Artist.objects.count(), 1)
         #this should make a new row for "Kanye" because lookup in DB cannot handle variant spellings
-        self.searcher.filter_list_of_artists(['Elvis Presley', 'Bon Iver', 'Kanye'])
-        self.assertEqual(Artist.objects.count(), 5)
+        self.searcher.filter_list_of_artists(['Kanye'])
+        self.assertEqual(Artist.objects.count(), 2)
          
 
