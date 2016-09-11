@@ -89,16 +89,16 @@ def setup(request):
     #handle invalid IP or ip == 127.0.0.1 because running locally 
     try:
         g = GeoIP2()
-        location = g.city(ip)
+        location = g.city(ip)['city']
     except AddressNotFoundError:
-        location = {'city' : "San Francisco"}
+        location = "San Francisco"
     # Fetch user data
     pc = request.session.get('pc')
     if pc is None:
         print("ERROR: setup called without pc session. Redirecting home.")
         return HttpResponseRedirect('/')
 
-    context = dict(pc.user_info, **{'location' : location['city']}) 
+    context = dict(pc.user_info, **{'location' : location}) 
     return render(request, 'music_this_week/setup.html', context)
 
 def search(request):
