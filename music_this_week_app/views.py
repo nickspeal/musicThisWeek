@@ -13,6 +13,7 @@ After a playlist is created, it redirects to the playlist URL
 
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
+#GeoIP2 docs: https://docs.djangoproject.com/en/1.10/ref/contrib/gis/geoip2/
 from django.contrib.gis.geoip2 import GeoIP2
 from geoip2.errors import AddressNotFoundError
 import backend
