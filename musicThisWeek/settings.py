@@ -119,7 +119,7 @@ USE_L10N = True
 USE_TZ = True
 
 #GeoIP2
-GEOIP_PATH =os.path.join(BASE_DIR, 'musicThisWeek/GeoIP2')
+GEOIP_PATH =os.path.join(BASE_DIR, '_private')
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.9/howto/static-files/
