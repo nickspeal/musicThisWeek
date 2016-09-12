@@ -64,7 +64,7 @@
         }
 
         function getLocationSuccessCallback(position) {
-            loc_field.hidden = true;
+            toggleLocationField();
             var lat = position.coords.latitude.toString();
             var lon = position.coords.longitude.toString();
             document.getElementById('hidden_lat').value = lat;
@@ -75,7 +75,7 @@
 	}
  
         function getLocationErrorCallback(error){
-            document.getElementById('latlng_checkbox').checked = false;
+            //hide checkbox, user doesnt want to see option
             document.getElementById('checkbox_span').hidden = true;
         }
  
