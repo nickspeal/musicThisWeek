@@ -50,6 +50,7 @@ class SpotifySearcher(object):
         try:
             artist_entry = Artist.objects.get(name = artist_name)
             artist_uri = artist_entry.spotify_uri
+            artist_uri = "spotify:artist:" + artist_uri if artist_uri is not None else artist_uri 
 
         # If the artist isn't in the database, search Spotify
         except Artist.DoesNotExist:
@@ -105,7 +106,6 @@ class SpotifySearcher(object):
         :return artist_uri: String or None, the best artist_URI found or None if no artists in results
         """
         artists = result['artists']['items']  # list of dicts
-
         num_matches = int(result['artists']['total'])
         if num_matches == 0:
             if VERBOSE:
@@ -147,7 +147,9 @@ class SpotifySearcher(object):
         :param artist_uri: String
         :return None:
         """
-        
+        if artist_uri is not None:
+            #all artist uris begin with spotify:artist: . therefore save space in DB by omitting first 15 char        
+            artist_uri = artist_uri[15:]
         Artist.objects.get_or_create(spotify_uri=artist_uri, name=artist_name)
 
     def get_song_list(self, artist_URIs, N=99, order="shuffled"):

@@ -6,7 +6,8 @@ from django.db import models
 
 class Artist(models.Model):
     name = models.CharField(max_length = 50, primary_key = True)
-    spotify_uri = models.CharField(max_length = 100, null = True)
+    #it looks like spotify id is always 22 chars but add a few more to be safe
+    spotify_uri = models.CharField(max_length = 28, null = True)
 
     def __str(self):
         return self.spotify_uri
