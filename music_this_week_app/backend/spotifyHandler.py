@@ -21,6 +21,15 @@ class SpotifySearcher(object):
     def __init__(self):
         # Init unauthorized Spotify handle
         self.sp = spotipy.Spotify()  # This should be the only instance attribute, to maintain statelessness
+        #initialize and empty list for tracks retrieved from cache
+        self.cached_tracks = []
+        #a dict of artist uri:name  pairs to save in the database
+        self.artists_to_save = dict()
+        #keep track of how many uri's weve found on spotify and in the DB
+        self.artists_uris_found = 0
+
+    def get_number_uris(self):
+        return self.artists_uris_found
 
     def filter_list_of_artists(self, unfiltered_artists):
         """
@@ -31,8 +40,18 @@ class SpotifySearcher(object):
         :return artistURIs: list of strings of verified Spotify artist identifiers
         """
 
-        artistURIs = [self.filter_artist(a) for a in unfiltered_artists]
+        artistURIs = []
+        for artist_name in unfiltered_artists:
+            try:   
+                artist_uri = self.filter_artist(artist_name)
+                artistURIs.append(artist_uri)
+                self.artists_to_save[artist_uri] = artist_name
+            except ValueError:
+                pass
+                
+             
         artistURIs = [a for a in artistURIs if a is not None]
+        self.artists_uris_found += len(artistURIs)
         if VERBOSE:
             print("\n%i of the %i artists were found on Spotify." % (len(artistURIs), len(unfiltered_artists)))
         return artistURIs
@@ -49,8 +68,15 @@ class SpotifySearcher(object):
         # Check if the artist is in the database
         try:
             artist_entry = Artist.objects.get(name = artist_name)
-            artist_uri = artist_entry.spotify_uri
-            artist_uri = "spotify:artist:" + artist_uri if artist_uri is not None else artist_uri 
+            self.artists_uris_found += 1
+            if not artist_entry.top_tracks == None:
+                top_tracks = artist_entry.top_tracks.split(',')
+                self.cached_tracks += top_tracks
+                print("found artist!!!")
+            
+            #artist_uri = "spotify:artist:" + artist_uri if artist_uri is not None else artist_uri 
+            #raise a value error to let caller know artist found in DB
+            raise ValueError()
 
         # If the artist isn't in the database, search Spotify
         except Artist.DoesNotExist:
@@ -63,7 +89,7 @@ class SpotifySearcher(object):
                 artist_uri = None
 
             # Save artist URI to the database for faster results next time
-            self.save_new_artist(artist_name, artist_uri)
+            #self.save_new_artist(artist_name, artist_uri)
 
         return artist_uri
 
@@ -140,17 +166,23 @@ class SpotifySearcher(object):
 
         return artist_uri
 
-    def save_new_artist(self, artist_name, artist_uri):
+    def save_new_artist(self, artist_name, artist_uri, artist_tracks):
         """
         saves artist name/uri pairs to DB
         :param artist_name: String
         :param artist_uri: String
+        :param artist_tracks: list
         :return None:
         """
         if artist_uri is not None:
             #all artist uris begin with spotify:artist: . therefore save space in DB by omitting first 15 char        
             artist_uri = artist_uri[15:]
-        Artist.objects.get_or_create(spotify_uri=artist_uri, name=artist_name)
+        artist_tracks = ','.join(artist_tracks)
+        artist, created = Artist.objects.get_or_create( name=artist_name,)
+        if created:
+            artist.spotify_uri = artist_uri
+            artist.top_tracks = artist_tracks
+            artist.save()
 
     def get_song_list(self, artist_URIs, N=99, order="shuffled"):
         """
@@ -163,7 +195,7 @@ class SpotifySearcher(object):
         """
 
         # Calculate number of tracks per artist. Round up to nearest int w/ int division then trim list later.
-        number_of_tracks_per_artist = N // len(artist_URIs) + 1
+        number_of_tracks_per_artist = N // self.artists_uris_found + 1
         if number_of_tracks_per_artist > 10:
             print("Number of tracks per artist, %i, cannot be greater than 10." %number_of_tracks_per_artist)
 
@@ -171,6 +203,9 @@ class SpotifySearcher(object):
         tracks = []
         for a in artist_URIs:
             tracks = tracks + self.find_top_tracks(a, N=number_of_tracks_per_artist)
+            self.save_new_artist(self.artists_to_save[a], a, tracks)
+        tracks += self.cached_tracks
+        print(tracks)
 
         if order == "shuffled":
             # Randomize playlist order
