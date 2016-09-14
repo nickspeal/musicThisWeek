@@ -72,9 +72,6 @@ class SpotifySearcher(object):
             if not artist_entry.top_tracks == None:
                 top_tracks = artist_entry.top_tracks.split(',')
                 self.cached_tracks += top_tracks
-                print("found artist!!!")
-            
-            #artist_uri = "spotify:artist:" + artist_uri if artist_uri is not None else artist_uri 
             #raise a value error to let caller know artist found in DB
             raise ValueError()
 
@@ -205,7 +202,6 @@ class SpotifySearcher(object):
             tracks = tracks + self.find_top_tracks(a, N=number_of_tracks_per_artist)
             self.save_new_artist(self.artists_to_save[a], a, tracks)
         tracks += self.cached_tracks
-        print(tracks)
 
         if order == "shuffled":
             # Randomize playlist order
