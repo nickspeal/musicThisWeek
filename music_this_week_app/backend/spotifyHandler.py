@@ -221,7 +221,6 @@ class SpotifySearcher(object):
             if top_tracks == '':
                 continue
             artist_tracks = top_tracks.split(',')
-            print(artist_tracks)
             num_playlist_tracks = max(number_of_tracks_per_artist, len(artist_tracks) )
             tracks += artist_tracks[:num_playlist_tracks]
 
@@ -233,7 +232,6 @@ class SpotifySearcher(object):
         else:
             raise Exception("Invalid song list order specified")
         
-        print(tracklist)
         return tracklist
 
     def find_artist_top_tracks(self, artist_uri, N=10):
