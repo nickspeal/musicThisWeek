@@ -7,7 +7,7 @@ from music_this_week_app.models import Artist
 
 class test_filter_list_of_artists(TestCase):
     """
-    Test how accurately we filter a list of artist names
+    Test how accurately we fill a the lists of artist names in SpotifyHandler
     """
 
     def setUp(self):
@@ -15,28 +15,34 @@ class test_filter_list_of_artists(TestCase):
 
     def test_empty(self):
         unfiltered_artists = []
-        URIs = self.searcher.filter_list_of_artists(unfiltered_artists)
+        self.searcher.fill_artist_lists(unfiltered_artists)
+        URIs = self.searcher.get_number_uris_found()
         self.assertEqual(len(URIs), 0)
 
     def test_exact_match(self):
         unfiltered_artists = ['A$AP ROCKY']
-        URIs = self.searcher.filter_list_of_artists(unfiltered_artists)
-        self.assertEqual(URIs, ['spotify:artist:13ubrt8QOOCPljQ2FL1Kca'])
+        self.searcher.fill_artist_lists(unfiltered_artists)
+        URI = self.searcher.new_artists[0].spotify_uri
+        
+                 
+        self.assertEqual(URI, 'spotify:artist:13ubrt8QOOCPljQ2FL1Kca')
 
     def test_non_match(self):
         unfiltered_artists = ['asdfasdf']
-        URIs = self.searcher.filter_list_of_artists(unfiltered_artists)
-        self.assertEqual(len(URIs), 0)
+        self.searcher.fill_artist_lists(unfiltered_artists)
+        self.assertEqual(len(self.searcher.new_artists + self.searcher.db_artists), 0)
 
     def test_incomplete_match(self):
         unfiltered_artists = ['Beach Boys'] # As opposed to The Beach Boys
-        URIs = self.searcher.filter_list_of_artists(unfiltered_artists)
-        self.assertEqual(URIs, ['spotify:artist:3oDbviiivRWhXwIE8hxkVV'])
+        self.searcher.fill_artist_lists(unfiltered_artists)
+        URI = self.searcher.new_artists[0].spotify_uri
+        self.assertEqual(URI, 'spotify:artist:3oDbviiivRWhXwIE8hxkVV')
 
     def test_one_good_one_bad(self):
         unfiltered_artists = ['U2', 'adfadfjkn;n']
-        URIs = self.searcher.filter_list_of_artists(unfiltered_artists)
-        self.assertEqual(URIs, ['spotify:artist:51Blml2LZPmy7TTiAg47vQ'])
+        URIs = self.searcher.fill_artist_lists(unfiltered_artists)
+        URI = self.searcher.new_artists[0].spotify_uri
+        self.assertEqual(URI, 'spotify:artist:51Blml2LZPmy7TTiAg47vQ')
 
 class test_filter_artist(TestCase):
     """
