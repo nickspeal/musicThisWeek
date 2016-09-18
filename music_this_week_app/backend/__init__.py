@@ -31,13 +31,13 @@ def execute(playlist_creator, search_args):
 
     # Validate and filter artists
     print("Searching for %i artists on Spotify..." % len(artists))
-    artist_URIs = searcher.filter_list_of_artists(artists)
-    if searcher.get_number_uris()  == 0:
+    searcher.fill_artist_lists(artists)
+    if searcher.get_number_uris_found()  == 0:
         return None, "No results found."
 
     # Create List of Songs (track URIs)
     print ("%i artists found on Spotify. Creating a playlist..." % len(artist_URIs))
-    song_list = searcher.get_song_list(artist_URIs, N=99, order='shuffled')
+    song_list = searcher.assemble_track_list(N=99, order='shuffled')
 
     # Get Playlist ID
     playlistURL = playlist_creator.get_spotify_playlist("musicThisWeek")
