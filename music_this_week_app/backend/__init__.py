@@ -32,11 +32,12 @@ def execute(playlist_creator, search_args):
     # Validate and filter artists
     print("Searching for %i artists on Spotify..." % len(artists))
     searcher.fill_artist_lists(artists)
-    if searcher.get_number_uris_found()  == 0:
+    num_uris = searcher.get_number_uris_found()   
+    if num_uris == 0:
         return None, "No results found."
 
     # Create List of Songs (track URIs)
-    print ("%i artists found on Spotify. Creating a playlist..." % len(artist_URIs))
+    print ("%i artists found on Spotify. Creating a playlist..." % num_uris)
     song_list = searcher.assemble_track_list(N=99, order='shuffled')
 
     # Get Playlist ID

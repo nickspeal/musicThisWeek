@@ -43,7 +43,6 @@ class SpotifySearcher(object):
             self.update_artist_uri(artist)
             self.update_artist_top_tracks(artist)
             artist.save()
-        self.assemble_track_list(self.new_artists + self.db_artists)
         
               
          
@@ -70,10 +69,10 @@ class SpotifySearcher(object):
         :param artist: an Artist object to be updated
         :return None:
         """
-       tracks = self.find_artist_top_tracks(artist.spotify_uri)
-       #store uris as a string
-       #TODO trim spotify:track: from front
-       artist.top_tracks = ",".join(tracks) 
+        tracks = self.find_artist_top_tracks(artist.spotify_uri)
+        #store uris as a string
+        #TODO trim spotify:track: from front
+        artist.top_tracks = ",".join(tracks) 
          
 
     def update_artist_uri(self, artist):
@@ -94,9 +93,9 @@ class SpotifySearcher(object):
         else:
             artist_uri = self.filter_spotify_result(search_result, artist.name)
 
-       #update artist spotify uri with None or the uri from searching
-       #TODO: trim spotify:artist: from front
-       artist.spotify_uri = artists_uri
+        #update artist spotify uri with None or the uri from searching
+        #TODO: trim spotify:artist: from front
+        artist.spotify_uri = artist_uri
 
     def search_spotify(self, artist_name):
         """
@@ -196,7 +195,8 @@ class SpotifySearcher(object):
         :return int:
         """
         total_artists = self.new_artists + self.db_artists
-        return len([artist in total_artists if artist.spotify_uri is not None] )
+        print(len([artist for artist in total_artists if artist.spotify_uri is not None] ) )
+        return len([artist for artist in total_artists if artist.spotify_uri is not None] )
 
     def assemble_track_list(self, N=99, order="shuffled"):
         """
@@ -216,7 +216,12 @@ class SpotifySearcher(object):
         tracks = []
         total_artists = self.new_artists + self.db_artists
         for artist in total_artists:
-            artist_tracks = artist.top_tracks.split(',')
+            top_tracks = artist.top_tracks
+            #TODO: handle the below issue more elegantly 
+            if top_tracks == '':
+                continue
+            artist_tracks = top_tracks.split(',')
+            print(artist_tracks)
             num_playlist_tracks = max(number_of_tracks_per_artist, len(artist_tracks) )
             tracks += artist_tracks[:num_playlist_tracks]
 
@@ -227,7 +232,8 @@ class SpotifySearcher(object):
             tracklist = tracks[:N]
         else:
             raise Exception("Invalid song list order specified")
-
+        
+        print(tracklist)
         return tracklist
 
     def find_artist_top_tracks(self, artist_uri, N=10):
@@ -242,10 +248,10 @@ class SpotifySearcher(object):
         if artist_uri == None:
             return tracklist
         try:
-            result = self.sp.artist_top_tracks(artist)
+            result = self.sp.artist_top_tracks(artist_uri)
         except ConnectionError as e:
             print ("ERROR: connection pool is closed; searching Spotify for top tracks for this artist: " + artist)
-            result = self.sp.artist_top_tracks(artist)
+            result = self.sp.artist_top_tracks(artist_uri)
             print ("tried again")
             print (result)
             raise e
