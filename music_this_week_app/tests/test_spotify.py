@@ -5,7 +5,8 @@ from django.test import TestCase
 import music_this_week_app.backend.spotifyHandler as spotifyHandler
 from music_this_week_app.models import Artist
 
-class test_filter_list_of_artists(TestCase):
+class test_fill_artist_lists(TestCase):
+    #TODO test other functionality of fill_artist_lists
     """
     Test how accurately we fill a the lists of artist names in SpotifyHandler
     """
@@ -44,6 +45,7 @@ class test_filter_list_of_artists(TestCase):
         URI = self.searcher.new_artists[0].spotify_uri
         self.assertEqual(URI, 'spotify:artist:51Blml2LZPmy7TTiAg47vQ')
 
+#lets delete this test class because theres no analogous method in the new implementation
 class test_filter_artist(TestCase):
     """
     Test how accurately we get a good artist match from a name
@@ -78,6 +80,44 @@ class test_filter_artist(TestCase):
         artist_name = 'National'
         URI = self.searcher.filter_artist(artist_name)
         self.assertEqual(URI, 'spotify:artist:2cCUtGK9sDU2EoElnk0GNB')
+
+class test_add_artists_to_lists(TestCase):
+    """
+    Test how accurately we get a good artist match from a name
+
+    Test for num matches being 0, 1, or multiple
+    """
+
+    def setUp(self):
+        self.searcher = spotifyHandler.SpotifySearcher()
+
+    def test_fake_artist_name(self):
+        artist_name = 'adfajdnfpaj'
+        self.searcher.add_artists_to_lists(artist_name)
+        self.assertEqual(self.searcher.new_artists[0].name, artist_name)
+
+    def test_real_artist_name(self):
+        artist_name = 'Fitz and The Tantrums'
+        self.searcher.add_artists_to_lists(artist_name)
+        self.assertEqual(self.searcher.new_artists[0].name, artist_name)
+
+    def test_retrieve_from_db(self):
+        artist_name = 'Fitz The Tantrums'
+        artist = Artist(name = artist_name)
+        artist.save()
+        self.searcher.add_artists_to_lists(artist_name)
+        self.assertEqual(self.searcher.db_artists[0].name, artist_name)
+
+    def test_one_new_one_from_db(self):
+        first_artist_name = 'The National'
+        second_artist_name = 'Drake'
+        first_artist = Artist(name = first_artist_name)
+        first_artist.save()
+        self.searcher.add_artist_to_list(first_artist_name)
+        self.searcher.add_artist_to_list(second_artist_name)
+        self.assertEqual(self.searcher.db_artists[0].name, first_artist_name)
+        self.assertEqual(self.searcher.new_artists[0].name, second_artist_name)
+
 
 class test_get_song_list(TestCase):
     """
