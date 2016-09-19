@@ -43,6 +43,8 @@ class SpotifySearcher(object):
             self.update_artist_uri(artist)
             self.update_artist_top_tracks(artist)
             artist.save()
+        print("len new: " + str(len(self.new_artists)))
+        print("len db: " + str(len(self.db_artists)))
         
               
          
@@ -169,24 +171,6 @@ class SpotifySearcher(object):
                 artist_uri = artists[0]['uri']           
 
         return artist_uri
-
-    def save_new_artist(self, artist_name, artist_uri, artist_tracks):
-        """
-        saves artist name/uri pairs to DB
-        :param artist_name: String
-        :param artist_uri: String
-        :param artist_tracks: list
-        :return None:
-        """
-        if artist_uri is not None:
-            #all artist uris begin with spotify:artist: . therefore save space in DB by omitting first 15 char        
-            artist_uri = artist_uri[15:]
-        artist_tracks = ','.join(artist_tracks)
-        artist, created = Artist.objects.get_or_create( name=artist_name,)
-        if created:
-            artist.spotify_uri = artist_uri
-            artist.top_tracks = artist_tracks
-            artist.save()
 
     def get_number_uris_found(self):
         """
