@@ -1,6 +1,6 @@
-# musicThisWeek
+# Music This Week
 
-Generates a Spotify playlist of bands that are playing in your area in the near future.
+Music This Week is a music discovery service that generates a Spotify playlist of bands that are playing near you in the near future.
 
 ## Consituent parts
 
