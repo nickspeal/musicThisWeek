@@ -12,7 +12,6 @@ from spotipy import oauth2 # for login
 from random import shuffle
 from music_this_week_app.models import Artist
 import os
-import random
 
 VERBOSE = False
 
