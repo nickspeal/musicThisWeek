@@ -72,11 +72,19 @@ class SpotifySearcher(object):
         :param artist: an Artist object to be updated
         :return None:
         """
-        search_results = self.find_artist_top_tracks(artist.spotify_uri)
+        search_results = self.find_artist_top_tracks(self.get_cached_artist_uri(artist))
         tracks = [track[14:] for track in search_results]
         #store uris as a string
         artist.top_tracks = ",".join(tracks) 
-         
+    
+    def get_cached_artist_uri(self, artist):
+        """
+        takes Artist model and returns its artist uri in format spotify:artists:[artist-specific code]
+        :param artist (Artist):
+        :return spotify_uri (String):
+        """    
+        spotify_uri = (None if artist.spotify_uri == None else "spotify:artist:" + artist.spotify_uri)
+        return spotify_uri
 
     def update_artist_uri(self, artist):
         """
@@ -97,8 +105,7 @@ class SpotifySearcher(object):
             artist_uri = self.filter_spotify_result(search_result, artist.name)
 
         #update artist spotify uri with None or the uri from searching
-        #TODO: trim spotify:artist: from front
-        artist.spotify_uri = artist_uri
+        artist.spotify_uri = (None if artist_uri == None else artist_uri[15:])
 
     def search_spotify(self, artist_name):
         """
