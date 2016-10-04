@@ -201,14 +201,7 @@ class SpotifySearcher(object):
         tracks = []
         total_artists = self.new_artists + self.db_artists
         for artist in total_artists:
-            top_tracks = artist.top_tracks
-            #TODO: handle the below issue more elegantly 
-            if top_tracks == '':
-                continue
-            artist_tracks = ['spotify:track:' + track for track in top_tracks.split(',')]
-            num_playlist_tracks = max(number_of_tracks_per_artist, len(artist_tracks) )
-            tracks += artist_tracks[:num_playlist_tracks]
-
+            tracks += self.get_cached_top_tracks(artist, number_of_tracks_per_artist)
         if order == "shuffled":
             # Randomize playlist order
             shuffle(tracks)
@@ -218,6 +211,23 @@ class SpotifySearcher(object):
             raise Exception("Invalid song list order specified")
         
         return tracklist
+
+    def get_cached_top_tracks(self, artist, max_tracks):
+         """
+         retrieves the top n tracks of an artist cached in the DB
+         :param artist (Artist): the cached artist model
+         :param max_tracks (int): the maximum number of tracks to retrieve:
+         :return tracklist (list<string>): a list of spotify track uris
+         """
+ 
+         top_tracks = artist.top_tracks
+         if top_tracks == '':
+             tracklist = [] 
+         else:
+             artist_tracks = ['spotify:track:' + track for track in top_tracks.split(',')]
+             num_playlist_tracks = max(max_tracks, len(artist_tracks) )
+             tracklist = artist_tracks[:num_playlist_tracks]
+         return tracklist
 
     def find_artist_top_tracks(self, artist_uri, N=10):
         """
