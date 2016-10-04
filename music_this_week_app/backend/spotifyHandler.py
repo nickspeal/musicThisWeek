@@ -12,6 +12,7 @@ from spotipy import oauth2 # for login
 from random import shuffle
 from music_this_week_app.models import Artist
 import os
+import random
 
 VERBOSE = False
 
@@ -71,9 +72,9 @@ class SpotifySearcher(object):
         :param artist: an Artist object to be updated
         :return None:
         """
-        tracks = self.find_artist_top_tracks(artist.spotify_uri)
+        search_results = self.find_artist_top_tracks(artist.spotify_uri)
+        tracks = [track[14:] for track in search_results]
         #store uris as a string
-        #TODO trim spotify:track: from front
         artist.top_tracks = ",".join(tracks) 
          
 
@@ -204,7 +205,7 @@ class SpotifySearcher(object):
             #TODO: handle the below issue more elegantly 
             if top_tracks == '':
                 continue
-            artist_tracks = top_tracks.split(',')
+            artist_tracks = ['spotify:track:' + track for track in top_tracks.split(',')]
             num_playlist_tracks = max(number_of_tracks_per_artist, len(artist_tracks) )
             tracks += artist_tracks[:num_playlist_tracks]
 
