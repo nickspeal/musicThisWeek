@@ -6,8 +6,6 @@ This keeps views.py lightweight.
 import eventFinder
 from spotifyHandler import SpotifySearcher
 
-# Instantiate object used for handling Spotify requests without authorization, i.e. searching
-searcher = SpotifySearcher()
 
 
 def execute(playlist_creator, search_args):
@@ -19,7 +17,8 @@ def execute(playlist_creator, search_args):
     :return playlistURL: URL for the spotify playlist. None if one was not created
     :return error: Error message, None if not applicable
     """
-
+    #for each search request we instantiate a spotify searcher object  
+    searcher = SpotifySearcher()
     # Validate user is logged in
     if not playlist_creator.is_logged_in():
         return None, "Error: User is not logged in"
@@ -31,13 +30,14 @@ def execute(playlist_creator, search_args):
 
     # Validate and filter artists
     print("Searching for %i artists on Spotify..." % len(artists))
-    artist_URIs = searcher.filter_list_of_artists(artists)
-    if len(artist_URIs) == 0:
+    searcher.fill_artist_lists(artists)
+    num_uris = searcher.get_number_uris_found()   
+    if num_uris == 0:
         return None, "No results found."
 
     # Create List of Songs (track URIs)
-    print ("%i artists found on Spotify. Creating a playlist..." % len(artist_URIs))
-    song_list = searcher.get_song_list(artist_URIs, N=99, order='shuffled')
+    print ("%i artists found on Spotify. Creating a playlist..." % num_uris)
+    song_list = searcher.assemble_track_list(N=99, order='shuffled')
 
     # Get Playlist ID
     playlistURL = playlist_creator.get_spotify_playlist("musicThisWeek")

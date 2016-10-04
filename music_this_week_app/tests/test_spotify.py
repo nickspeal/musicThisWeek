@@ -5,9 +5,10 @@ from django.test import TestCase
 import music_this_week_app.backend.spotifyHandler as spotifyHandler
 from music_this_week_app.models import Artist
 
-class test_filter_list_of_artists(TestCase):
+class test_fill_artist_lists(TestCase):
+    #TODO test other functionality of fill_artist_lists
     """
-    Test how accurately we filter a list of artist names
+    Test how accurately we fill a the lists of artist names in SpotifyHandler
     """
 
     def setUp(self):
@@ -15,29 +16,84 @@ class test_filter_list_of_artists(TestCase):
 
     def test_empty(self):
         unfiltered_artists = []
-        URIs = self.searcher.filter_list_of_artists(unfiltered_artists)
+        self.searcher.fill_artist_lists(unfiltered_artists)
+        URIs = self.searcher.get_number_uris_found()
         self.assertEqual(len(URIs), 0)
 
     def test_exact_match(self):
         unfiltered_artists = ['A$AP ROCKY']
-        URIs = self.searcher.filter_list_of_artists(unfiltered_artists)
-        self.assertEqual(URIs, ['spotify:artist:13ubrt8QOOCPljQ2FL1Kca'])
+        self.searcher.fill_artist_lists(unfiltered_artists)
+        URI = self.searcher.new_artists[0].spotify_uri
+        self.assertEqual(URI, 'spotify:artist:13ubrt8QOOCPljQ2FL1Kca')
 
     def test_non_match(self):
         unfiltered_artists = ['asdfasdf']
-        URIs = self.searcher.filter_list_of_artists(unfiltered_artists)
-        self.assertEqual(len(URIs), 0)
+        self.searcher.fill_artist_lists(unfiltered_artists)
+        self.assertEqual(len(self.searcher.new_artists + self.searcher.db_artists), 0)
 
     def test_incomplete_match(self):
         unfiltered_artists = ['Beach Boys'] # As opposed to The Beach Boys
-        URIs = self.searcher.filter_list_of_artists(unfiltered_artists)
-        self.assertEqual(URIs, ['spotify:artist:3oDbviiivRWhXwIE8hxkVV'])
+        self.searcher.fill_artist_lists(unfiltered_artists)
+        URI = self.searcher.new_artists[0].spotify_uri
+        self.assertEqual(URI, 'spotify:artist:3oDbviiivRWhXwIE8hxkVV')
 
     def test_one_good_one_bad(self):
         unfiltered_artists = ['U2', 'adfadfjkn;n']
-        URIs = self.searcher.filter_list_of_artists(unfiltered_artists)
-        self.assertEqual(URIs, ['spotify:artist:51Blml2LZPmy7TTiAg47vQ'])
+        URIs = self.searcher.fill_artist_lists(unfiltered_artists)
+        URI = self.searcher.new_artists[0].spotify_uri
+        self.assertEqual(URI, 'spotify:artist:51Blml2LZPmy7TTiAg47vQ')
 
+class test_add_artist_to_list(TestCase):
+
+    """
+    test whether artist is successfully added to appropriate list field of SpotifySearcher
+    """
+    def setUp(self):
+        self.searcher = spotifyHandler.SpotifySearcher()
+
+    def test_add_new_artist(self):
+        artist = 'Lupe Fiasco'
+        self.assertEqual(len(self.searcher.new_artists), 0)
+        self.searcher.add_artist_to_lists(artist)
+        self.assertEqual(len(self.searcher.new_artists), 1)
+
+   def test_made_new_artist
+        artist = 'Lupe Fiasco'
+        self.searcher.add_artist_to_lists(artist)
+        self.assertEqual(str(type(self.searcher.new_artists[0])), "<class 'music_this_week_app.models.Artist'>")
+    
+    def test_retrieve_saved_artist:
+        artist = Artist(name = 'Mastodon')
+        artist.save()
+        assertEqual(len(self.searcher.db_artists), 0)
+        self.searcher.add_artist_to_lists('Mastodon')
+        self.assertEqual(len(self.searcher.db_artists), 1)
+
+class test_update_artist_top_tracks(TestCase):
+    """
+    test whether calling this method retrieves the artists top tracks from 
+    spotify
+    """    
+    def setUp(self):
+        self.searcher = spotifyHandler.SpotifySearcher()
+    
+    def test_update_single_artist_tracks(self):
+        national = Artist(name = 'The National' spotify_uri = 'spotify:artist:2cCUtGK9sDU2EoElnk0GNB')
+        self.assertTrue(national.top_tracks == None)        
+        self.searcher.update_artist_top_tracks(national)
+        self.assertFalse(national.top_tracks == None)        
+
+class test_get_cached_artist_uri(TestCase):
+    def setUp(self):
+        self.searcher = spotifyHandler.SpotifySearcher()
+    
+    def test_get_single_cached_uri(self):
+         #TODO
+    
+
+
+
+#lets delete this test class because theres no analogous method in the new implementation
 class test_filter_artist(TestCase):
     """
     Test how accurately we get a good artist match from a name
@@ -72,6 +128,44 @@ class test_filter_artist(TestCase):
         artist_name = 'National'
         URI = self.searcher.filter_artist(artist_name)
         self.assertEqual(URI, 'spotify:artist:2cCUtGK9sDU2EoElnk0GNB')
+
+class test_add_artists_to_lists(TestCase):
+    """
+    Test how accurately we get a good artist match from a name
+
+    Test for num matches being 0, 1, or multiple
+    """
+
+    def setUp(self):
+        self.searcher = spotifyHandler.SpotifySearcher()
+
+    def test_fake_artist_name(self):
+        artist_name = 'adfajdnfpaj'
+        self.searcher.add_artists_to_lists(artist_name)
+        self.assertEqual(self.searcher.new_artists[0].name, artist_name)
+
+    def test_real_artist_name(self):
+        artist_name = 'Fitz and The Tantrums'
+        self.searcher.add_artists_to_lists(artist_name)
+        self.assertEqual(self.searcher.new_artists[0].name, artist_name)
+
+    def test_retrieve_from_db(self):
+        artist_name = 'Fitz The Tantrums'
+        artist = Artist(name = artist_name)
+        artist.save()
+        self.searcher.add_artists_to_lists(artist_name)
+        self.assertEqual(self.searcher.db_artists[0].name, artist_name)
+
+    def test_one_new_one_from_db(self):
+        first_artist_name = 'The National'
+        second_artist_name = 'Drake'
+        first_artist = Artist(name = first_artist_name)
+        first_artist.save()
+        self.searcher.add_artist_to_list(first_artist_name)
+        self.searcher.add_artist_to_list(second_artist_name)
+        self.assertEqual(self.searcher.db_artists[0].name, first_artist_name)
+        self.assertEqual(self.searcher.new_artists[0].name, second_artist_name)
+
 
 class test_get_song_list(TestCase):
     """

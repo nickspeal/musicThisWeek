@@ -21,50 +21,90 @@ class SpotifySearcher(object):
     def __init__(self):
         # Init unauthorized Spotify handle
         self.sp = spotipy.Spotify()  # This should be the only instance attribute, to maintain statelessness
+        #a list of the artist models retrieved from db
+        self.db_artists = []
+        # a list of the new artist models
+        self.new_artists = []
 
-    def filter_list_of_artists(self, unfiltered_artists):
+
+    def fill_artist_lists(self, unfiltered_artist_names):
         """
         Turn a list of potential artist names into a list of Spotify artist URIs
         Filter out artists that cannot be found from the list.
 
-        :param unfiltered_artists: list of strings of artist names
+        :param unfiltered_artist_names: list of strings of artist names
         :return artistURIs: list of strings of verified Spotify artist identifiers
         """
 
-        artistURIs = [self.filter_artist(a) for a in unfiltered_artists]
-        artistURIs = [a for a in artistURIs if a is not None]
-        if VERBOSE:
-            print("\n%i of the %i artists were found on Spotify." % (len(artistURIs), len(unfiltered_artists)))
-        return artistURIs
-
-    def filter_artist(self, artist_name):
-        """
-        Matches an artist name to a Spotify Artist URI
-        First checks the local database for a match and searches Spotify otherwise
+        for artist_name in unfiltered_artist_names:
+            self.add_artist_to_lists(artist_name)
+        for artist in self.new_artists:
+            #keep this order, because need uri to find tracks
+            self.update_artist_uri(artist)
+            self.update_artist_top_tracks(artist)
+            artist.save()
+        print("len new: " + str(len(self.new_artists)))
+        print("len db: " + str(len(self.db_artists)))
+        
+              
+         
+    def add_artist_to_lists(self, artist_name):
+        """ 
+        looks in the database for an artist matching this name and adds it to 
+        db_artists if it exists. If not it instantiates an artist and adds it to
+        new_artists 
 
         :param artist_name: string
-        :return artistURI: Verified Spotify artist identifier. Return None if no match
         """
-
-        # Check if the artist is in the database
         try:
             artist_entry = Artist.objects.get(name = artist_name)
-            artist_uri = artist_entry.spotify_uri
-
-        # If the artist isn't in the database, search Spotify
+            self.db_artists.append(artist_entry)
         except Artist.DoesNotExist:
-            result = self.search_spotify(artist_name)
+            artist_entry = Artist(name = artist_name)
+            self.new_artists.append(artist_entry)
+              
+            
+    def update_artist_top_tracks(self, artist):
+        """
+        takes an artist and updates their top_tracks attribute with their top tracks ffound on spotify
+ 
+        :param artist: an Artist object to be updated
+        :return None:
+        """
+        search_results = self.find_artist_top_tracks(self.get_cached_artist_uri(artist))
+        tracks = [track[14:] for track in search_results]
+        #store uris as a string
+        artist.top_tracks = ",".join(tracks) 
+    
+    def get_cached_artist_uri(self, artist):
+        """
+        takes Artist model and returns its artist uri in format spotify:artists:[artist-specific code]
+        :param artist (Artist):
+        :return spotify_uri (String):
+        """    
+        spotify_uri = (None if artist.spotify_uri == None else "spotify:artist:" + artist.spotify_uri)
+        return spotify_uri
 
-            # If there were any errors searching Spotify, don't continue
-            if result is not None:
-                artist_uri = self.filter_spotify_result(result, artist_name)
-            else:
-                artist_uri = None
+    def update_artist_uri(self, artist):
+        """
+        Takes an Artist object and searches spotify to update the artist's spotify_uri 
+       sets spotify_uri to None if no matching artist.name found on spotify 
 
-            # Save artist URI to the database for faster results next time
-            self.save_new_artist(artist_name, artist_uri)
+        :param artist: models.Artist 
+        :return None: 
+        """
+        
 
-        return artist_uri
+        search_result = self.search_spotify(artist.name)
+
+        # If there were any errors searching Spotify, don't continue
+        if search_result is None:
+            artist_uri = None
+        else:
+            artist_uri = self.filter_spotify_result(search_result, artist.name)
+
+        #update artist spotify uri with None or the uri from searching
+        artist.spotify_uri = (None if artist_uri == None else artist_uri[15:])
 
     def search_spotify(self, artist_name):
         """
@@ -105,7 +145,6 @@ class SpotifySearcher(object):
         :return artist_uri: String or None, the best artist_URI found or None if no artists in results
         """
         artists = result['artists']['items']  # list of dicts
-
         num_matches = int(result['artists']['total'])
         if num_matches == 0:
             if VERBOSE:
@@ -140,60 +179,78 @@ class SpotifySearcher(object):
 
         return artist_uri
 
-    def save_new_artist(self, artist_name, artist_uri):
+    def get_number_uris_found(self):
         """
-        saves artist name/uri pairs to DB
-        :param artist_name: String
-        :param artist_uri: String
-        :return None:
-        """
+        calculates the number of artists in new_artists and db_artists with a spotify URI
         
-        Artist.objects.get_or_create(spotify_uri=artist_uri, name=artist_name)
+        :return int:
+        """
+        total_artists = self.new_artists + self.db_artists
+        print(len([artist for artist in total_artists if artist.spotify_uri is not None] ) )
+        return len([artist for artist in total_artists if artist.spotify_uri is not None] )
 
-    def get_song_list(self, artist_URIs, N=99, order="shuffled"):
+    def assemble_track_list(self, N=99, order="shuffled"):
         """
         Come up with a list of songs by a given list of artists
 
-        :param artist_URIs: List of strings identifying Spotify Artists
         :param N: Desired length of the list
         :param order: Desired order of the list. Can be "shuffled". Other options may be added later
         :return tracklist: List of spotify track URIs, to create playlist later.
         """
 
         # Calculate number of tracks per artist. Round up to nearest int w/ int division then trim list later.
-        number_of_tracks_per_artist = N // len(artist_URIs) + 1
+        number_of_tracks_per_artist = N // self.get_number_uris_found() + 1
         if number_of_tracks_per_artist > 10:
             print("Number of tracks per artist, %i, cannot be greater than 10." %number_of_tracks_per_artist)
 
         # Identify songs for the playlist; list of track URIs
         tracks = []
-        for a in artist_URIs:
-            tracks = tracks + self.find_top_tracks(a, N=number_of_tracks_per_artist)
-
+        total_artists = self.new_artists + self.db_artists
+        for artist in total_artists:
+            tracks += self.get_cached_top_tracks(artist, number_of_tracks_per_artist)
         if order == "shuffled":
             # Randomize playlist order
             shuffle(tracks)
             print("Prior to trimming, the playlist is %i songs long" %len(tracks))
-            tracklist = tracks[0:N]
+            tracklist = tracks[:N]
         else:
             raise Exception("Invalid song list order specified")
-
+        
         return tracklist
 
-    def find_top_tracks(self, artist, N=10):
+    def get_cached_top_tracks(self, artist, max_tracks):
+         """
+         retrieves the top n tracks of an artist cached in the DB
+         :param artist (Artist): the cached artist model
+         :param max_tracks (int): the maximum number of tracks to retrieve:
+         :return tracklist (list<string>): a list of spotify track uris
+         """
+ 
+         top_tracks = artist.top_tracks
+         if top_tracks == '':
+             tracklist = [] 
+         else:
+             artist_tracks = ['spotify:track:' + track for track in top_tracks.split(',')]
+             num_playlist_tracks = max(max_tracks, len(artist_tracks) )
+             tracklist = artist_tracks[:num_playlist_tracks]
+         return tracklist
+
+    def find_artist_top_tracks(self, artist_uri, N=10):
         """
         Return top N tracks by one artist
 
-        :param artist: URI
-        :param N: maximum number of tracks to return. Cannot be greater than 10
+        :param artist_uri: String the artist URI
+        :param N: int maximum number of tracks to return. Cannot be greater than 10
         :return: list of track URIs
         """
         tracklist = []
+        if artist_uri == None:
+            return tracklist
         try:
-            result = self.sp.artist_top_tracks(artist)
+            result = self.sp.artist_top_tracks(artist_uri)
         except ConnectionError as e:
             print ("ERROR: connection pool is closed; searching Spotify for top tracks for this artist: " + artist)
-            result = self.sp.artist_top_tracks(artist)
+            result = self.sp.artist_top_tracks(artist_uri)
             print ("tried again")
             print (result)
             raise e
