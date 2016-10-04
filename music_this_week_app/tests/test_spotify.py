@@ -24,8 +24,6 @@ class test_fill_artist_lists(TestCase):
         unfiltered_artists = ['A$AP ROCKY']
         self.searcher.fill_artist_lists(unfiltered_artists)
         URI = self.searcher.new_artists[0].spotify_uri
-        
-                 
         self.assertEqual(URI, 'spotify:artist:13ubrt8QOOCPljQ2FL1Kca')
 
     def test_non_match(self):
@@ -44,6 +42,56 @@ class test_fill_artist_lists(TestCase):
         URIs = self.searcher.fill_artist_lists(unfiltered_artists)
         URI = self.searcher.new_artists[0].spotify_uri
         self.assertEqual(URI, 'spotify:artist:51Blml2LZPmy7TTiAg47vQ')
+
+class test_add_artist_to_list(TestCase):
+
+    """
+    test whether artist is successfully added to appropriate list field of SpotifySearcher
+    """
+    def setUp(self):
+        self.searcher = spotifyHandler.SpotifySearcher()
+
+    def test_add_new_artist(self):
+        artist = 'Lupe Fiasco'
+        self.assertEqual(len(self.searcher.new_artists), 0)
+        self.searcher.add_artist_to_lists(artist)
+        self.assertEqual(len(self.searcher.new_artists), 1)
+
+   def test_made_new_artist
+        artist = 'Lupe Fiasco'
+        self.searcher.add_artist_to_lists(artist)
+        self.assertEqual(str(type(self.searcher.new_artists[0])), "<class 'music_this_week_app.models.Artist'>")
+    
+    def test_retrieve_saved_artist:
+        artist = Artist(name = 'Mastodon')
+        artist.save()
+        assertEqual(len(self.searcher.db_artists), 0)
+        self.searcher.add_artist_to_lists('Mastodon')
+        self.assertEqual(len(self.searcher.db_artists), 1)
+
+class test_update_artist_top_tracks(TestCase):
+    """
+    test whether calling this method retrieves the artists top tracks from 
+    spotify
+    """    
+    def setUp(self):
+        self.searcher = spotifyHandler.SpotifySearcher()
+    
+    def test_update_single_artist_tracks(self):
+        national = Artist(name = 'The National' spotify_uri = 'spotify:artist:2cCUtGK9sDU2EoElnk0GNB')
+        self.assertTrue(national.top_tracks == None)        
+        self.searcher.update_artist_top_tracks(national)
+        self.assertFalse(national.top_tracks == None)        
+
+class test_get_cached_artist_uri(TestCase):
+    def setUp(self):
+        self.searcher = spotifyHandler.SpotifySearcher()
+    
+    def test_get_single_cached_uri(self):
+         #TODO
+    
+
+
 
 #lets delete this test class because theres no analogous method in the new implementation
 class test_filter_artist(TestCase):
