@@ -10,6 +10,7 @@ import os
 import time
 
 import grequests
+import requests
 import re
 
 
@@ -72,7 +73,7 @@ class EventFinder(object):
 
         start_ms = time_ms()
         print('Request to %s' % url)
-        response = grequests.get(url)
+        response = requests.get(url)
         print('Request to ' + url + ' took ' + str(time_ms() - start_ms) + ' ms')
 
         if not request_was_successful(response):
@@ -83,7 +84,7 @@ class EventFinder(object):
         total_requested = int(search_args.get('nResults'))
         total_events = min([total_available, total_requested])
 
-        return total_events / EVENTFUL_RESULTS_PER_PAGE + 1
+        return total_events // EVENTFUL_RESULTS_PER_PAGE + 1
 
     @staticmethod
     def parse_events(responses, total_pages):
