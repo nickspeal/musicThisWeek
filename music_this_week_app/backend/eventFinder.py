@@ -48,6 +48,15 @@ def request_was_successful(response):
         return False
     return True
 
+def parseDate(start, end):
+    """
+    Converts the start and end dates from the HTML widget into eventful format
+    :param start: String, search range start date with format YYYY-MM-DD
+    :param end: String, search range end date with format YYYY-MM-DD
+    :return parsedDate: String, search range with format YYYYMMDD00-YYYYMMDD00
+    """
+    return re.sub('-', '', start) + '00-' + re.sub('-','', end) + '00'
+
 
 class EventFinder(object):
     def __init__(self):
@@ -130,7 +139,7 @@ class EventFinder(object):
         filters = [ '',
                     'category=music', #seems to return the same results for music or concerts, so this might be unnecessary
                     'location=%s' %searchArgs['location'],
-                    'date=%s' %self.parseDate(searchArgs['start'], searchArgs['end']),
+                    'date=%s' %parseDate(searchArgs['start'], searchArgs['end']),
                     'page_size=%s' %min(EVENTFUL_RESULTS_PER_PAGE, int(searchArgs['nResults'])),
                     'page_number=%s' %pageNum,
                     'sort_order=popularity' #Customer Support says this should work but I see no evidence of it working
@@ -139,15 +148,6 @@ class EventFinder(object):
         baseURL = 'http://api.eventful.com/json/events/search?app_key=%s' % EVENTFUL_KEY
         URL = baseURL + filterString
         return URL
-
-    def parseDate(self, start, end):
-        """
-        Converts the start and end dates from the HTML widget into eventful format
-        :param start: String, search range start date with format YYYY-MM-DD
-        :param end: String, search range end date with format YYYY-MM-DD
-        :return parsedDate: String, search range with format YYYYMMDD00-YYYYMMDD00
-        """
-        return re.sub('-', '', start) + '00-' + re.sub('-','', end) + '00'
 
     def generateListOfArtists(self):
         for event in self.upcomingEvents:
