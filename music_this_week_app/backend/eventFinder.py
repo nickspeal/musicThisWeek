@@ -8,6 +8,7 @@ Nick Speal 2016
 import requests
 import os
 from datetime import datetime
+import re
 
 EVENTFUL_RESULTS_PER_PAGE = 50  # (I think it is max 100, default 20)
 
@@ -17,6 +18,8 @@ if not EVENTFUL_KEY:
 
 class EventFinder(object):
     def __init__(self):
+        self.artists = []
+        self.performers = []
         self.searchArgs = {}
         self.upcomingEvents = [] #A list of Event objects
 
@@ -30,10 +33,26 @@ class EventFinder(object):
         :return:
         """
 
+        # Check the result count for the desired search args
+        url = self.assembleRequest(searchArgs, pageNum=1, count_only=True)
+        response = self.sendRequest(url)
+        if response is None:
+            print ("ERROR: No response from eventful")
+            return
+
+        number_of_available_results = int(response.get('total_items', 0))
+        number_of_requested_results = int(searchArgs.get('nResults'))
+
         # Determine how many pages are needed, integer division
-        nPages = int(searchArgs['nResults'])/EVENTFUL_RESULTS_PER_PAGE + 1
+        if number_of_available_results == 0:
+            return
+        elif number_of_available_results >= number_of_requested_results:
+            nPages = number_of_requested_results // EVENTFUL_RESULTS_PER_PAGE + 1
+        else:
+            nPages = number_of_available_results // EVENTFUL_RESULTS_PER_PAGE + 1
+
         for pageNum in range(1,nPages+1):
-            # Assemble the Search Querie
+            # Assemble the Search Query
             url = self.assembleRequest(searchArgs, pageNum)
 
             # Submit the search query
@@ -41,38 +60,52 @@ class EventFinder(object):
             if response is None:
                 print("ERROR: could not search Eventful for page %i of %i" % (pageNum, nPages))
                 continue
-
+            elif response.get('events') is None:
+                print("ERROR: No eventful results for page %i of %i" % (pageNum, nPages))
+                continue
             # parse the events into a list of Event objects
             for event in self.buildEvents(response):
                 self.upcomingEvents.append(event)
 
-        print "Done searching for events. Saved %i events matching the search query" % len(self.upcomingEvents)
+        print ("Done searching for events. Saved %i events matching the search query" % len(self.upcomingEvents) )
         self.generateListOfArtists()
 
+    def assembleRequest(self, searchArgs, pageNum, count_only = False):
+        """
+        Receives search parameters and returns a URL for the endpoint
 
-    def assembleRequest(self, searchArgs, pageNum):
-        '''Receives search parameters and returns a URL for the endpoint'''
-
-        filters = ['category=music', #seems to return the same results for music or concerts, so this might be unnecessary
-                             'location=%s' %searchArgs['location'],
-                             'date=%s' %searchArgs['date'],
-                             'page_size=%s' %EVENTFUL_RESULTS_PER_PAGE,
-                             'page_number=%s' %pageNum,
-                             'sort_order=popularity' #Customer Support says this should work but I see no evidence of it working
-                             ]
-
+        :param searchArgs: Dictionary of eventful search arguements
+        :param pageNum: Eventful page number
+        :param count_only: Flag for returning all results or just the number of results
+        :return URL: Eventful endpoint with the appropriate parameters
+        """
+        filters = [ '',
+                    'category=music', #seems to return the same results for music or concerts, so this might be unnecessary
+                    'location=%s' %searchArgs['location'],
+                    'date=%s' %self.parseDate(searchArgs['start'], searchArgs['end']),
+                    'page_size=%s' %min(EVENTFUL_RESULTS_PER_PAGE, int(searchArgs['nResults'])),
+                    'page_number=%s' %pageNum,
+                    'sort_order=popularity' #Customer Support says this should work but I see no evidence of it working
+                   ]
+        filterString = '&'.join(filters + ['count_only=true'] if count_only else filters)
         baseURL = 'http://api.eventful.com/json/events/search?app_key=%s' % EVENTFUL_KEY
-
-        URL = baseURL
-        for f in filters:
-            URL += '&' + f
+        URL = baseURL + filterString
         return URL
+
+    def parseDate(self, start, end):
+        """
+        Converts the start and end dates from the HTML widget into eventful format
+        :param start: String, search range start date with format YYYY-MM-DD
+        :param end: String, search range end date with format YYYY-MM-DD
+        :return parsedDate: String, search range with format YYYYMMDD00-YYYYMMDD00
+        """
+        return re.sub('-', '', start) + '00-' + re.sub('-','', end) + '00'
 
     def sendRequest(self, endpoint):
         """Send the search query to Eventful"""
-
-        print "Sending request: " + endpoint
+        print ("Sending request: " + endpoint)
         resp = requests.get(endpoint)
+
         if (resp.status_code != 200):
             print("Bad response from server. \n  Sent request: %s \n  Status code: %i" % (endpoint, resp.status_code))
             print(resp.json())
@@ -81,18 +114,16 @@ class EventFinder(object):
             print("Server response Not OK. \n  Sent request: %s \n  Status code: %i" % (endpoint, resp.status_code))
             print(resp.json())
             return None
+        if resp.headers.get('Content-length') == '0':
+            print ("No content from Eventful for request: " + endpoint)
+            return None
         return resp.json()
 
     def buildEvents(self, json_response):
-        self.numResults = int(json_response['total_items'])
-        if self.numResults > 0:
-            for event_dict in json_response['events']['event']:
-                yield Event(event_dict)
+        for event_dict in json_response['events']['event']:
+            yield Event(event_dict)
 
     def generateListOfArtists(self):
-        self.artists = []
-        self.performers = []
-
         for event in self.upcomingEvents:
             self.artists.append(event.title)
             self.performers += event.performers
@@ -117,8 +148,8 @@ class Event(object):
                 for item in p:
                     self.performers.append(item['name'])
             else:
-                print type(p)
-                print p
+                print (type(p))
+                print (p)
                 raise Exception("Performers are formatted weirdly")
 
         self.venue_name = event_dict['venue_name']

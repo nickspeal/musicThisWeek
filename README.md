@@ -1,6 +1,6 @@
-# musicThisWeek
+# Music This Week
 
-Generates a Spotify playlist of bands that are playing in your area in the near future.
+Music This Week is a music discovery service that generates a Spotify playlist of bands that are playing near you in the near future.
 
 ## Consituent parts
 
@@ -23,27 +23,16 @@ Nick Speal 2016. All rights reserved.
 
 # Setup
 
-## Dependencies
-
-Requests (2.9.1)
-
-[Spotipy](https://spotipy.readthedocs.io/en/latest/)
-
-Django (1.9.7)
-
 ## Instructions
 
+1. You'll probably want to activate a virtualenv.
 1. Install dependencies
 
 	~~~~
-	pip install requests
-
-	pip install spotipy
-
-	pip install Django
+	pip install -r requirements.txt
 	~~~~
 
-2. create a config file called spotipyCreds.sh:
+1. create a config file in the `_private` directory (gitignored) called spotipyCreds.sh:
 
 	~~~~
 	export SPOTIPY_CLIENT_ID='ask me for the client ID'
@@ -57,12 +46,12 @@ Django (1.9.7)
     export EVENTFUL_KEY='ask me'
 	~~~~
 
-3. `sh run.sh` This will source the above file, start the server, and open a browser for you!
+1. `sh run.sh` This will source the above file, start the server, and open a browser for you!
 
-4. Follow instructions in the browser
+1. Follow instructions in the browser
 
-5. Play the playlist in the browser or find it automatically ready in the Spotify app
- 
+1. Play the playlist in the browser or find it automatically ready in the Spotify app
+
 
 # Documentation
 
@@ -92,5 +81,3 @@ For CLI Login:
 1. New user goes to the website, logs in for the first time, specifies search parameters, creates a playlist.
 2. Returning: User returns to the website, is automatically logged in and search params are loaded, creates a playlist _(Not done yet)_
 3. AutoRun: For each user, saved searches are repeated and playlists are updated periodically _(Not done yet)_
-
-
