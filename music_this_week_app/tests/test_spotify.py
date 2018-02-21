@@ -140,7 +140,7 @@ class test_get_song_list(TestCase):
                        u'spotify:artist:1l8Fu6IkuTP0U5QetQJ5Xt', u'spotify:artist:16GcWuvvybAoaHr0NqT8Eh',
                        u'spotify:artist:4dpARuHxo51G3z768sgnrY', u'spotify:artist:2cCUtGK9sDU2EoElnk0GNB',
                        u'spotify:artist:6urkHDoIVO1WO8vNIwcJmM']
-        print "Running tests that search for songs. This takes a while, about 15 sec per search..."
+        print("Running tests that search for songs. This takes a while, about 15 sec per search...")
 
     def test_more_songs_than_artists(self):
         self.artist_URIs = self.artist_URIs[0:30]
@@ -275,5 +275,3 @@ class test_cache_artists(TestCase):
         #this should make a new row for "Kanye" because lookup in DB cannot handle variant spellings
         self.searcher.filter_list_of_artists(['Kanye'])
         self.assertEqual(Artist.objects.count(), 2)
-         
-
