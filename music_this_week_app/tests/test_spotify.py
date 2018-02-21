@@ -218,7 +218,7 @@ class test_mess_with_playlists(TestCase):
         self.pc = spotifyHandler.PlaylistCreator()
         self.username = 'nickspeal_test'
         self.playlist_name = 'musicThisWeek_test'
-        self.playlist_url = 'http://open.spotify.com/user/nickspeal_test/playlist/0EoNvCWUt0OMQ2XSOy0sTC'
+        self.playlist_url = u'http://open.spotify.com/user/nickspeal_test/playlist/0EoNvCWUt0OMQ2XSOy0sTC'
         self.pc.cli_login(self.username)
 
     def test_find_existing_playlist(self):
