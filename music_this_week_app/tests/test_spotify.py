@@ -200,9 +200,18 @@ class test_init_login(TestCase):
 
     def test_init_login_returned_url(self):
         url = self.pc.init_login()
-        pattern = r'https://accounts.spotify.com/authorize\?client_id=(.*)&response_type=code&redirect_uri=(.*)&scope=playlist-modify-public'
-        match = re.search(pattern, url)
-        self.assertTrue(match is not None)
+        patterns = [
+            r'https://accounts.spotify.com/authorize',
+            r'scope=playlist-modify-public',
+            r'redirect_uri=',
+            r'response_type=code',
+            r'client_id=',
+        ]
+        matches = [re.search(pattern, url) for pattern in patterns]
+
+        if None in matches:
+            print("Callback URL from spotify is missing a required component: ", url)
+        self.assertFalse(None in matches)
 
     def test_init_login_has_required_credentials(self):
         url = self.pc.init_login()
