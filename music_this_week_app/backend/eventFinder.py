@@ -51,10 +51,7 @@ class EventFinder(object):
         else:
             nPages = number_of_available_results // EVENTFUL_RESULTS_PER_PAGE + 1
 
-        # Accommodate searching for a small number of events
-        EVENTFUL_RESULTS_PER_PAGE = min(EVENTFUL_RESULTS_PER_PAGE, number_of_requested_results)
-
-        for pageNum in range(1,nPages):
+        for pageNum in range(1,nPages+1):
             # Assemble the Search Query
             url = self.assembleRequest(searchArgs, pageNum)
 
@@ -86,7 +83,7 @@ class EventFinder(object):
                     'category=music', #seems to return the same results for music or concerts, so this might be unnecessary
                     'location=%s' %searchArgs['location'],
                     'date=%s' %self.parseDate(searchArgs['start'], searchArgs['end']),
-                    'page_size=%s' %EVENTFUL_RESULTS_PER_PAGE,
+                    'page_size=%s' %min(EVENTFUL_RESULTS_PER_PAGE, int(searchArgs['nResults'])),
                     'page_number=%s' %pageNum,
                     'sort_order=popularity' #Customer Support says this should work but I see no evidence of it working
                    ]
