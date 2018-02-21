@@ -223,7 +223,7 @@ class test_mess_with_playlists(TestCase):
 
     def test_find_existing_playlist(self):
         url = self.pc.get_spotify_playlist(self.playlist_name)
-        print url
+        print(url)
         self.assertEqual(url, self.playlist_url)
 
     # Cannot test creation of a non-existent playlist because it would be annoying to clutter up with lots of playlists.
