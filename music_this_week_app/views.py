@@ -5,7 +5,7 @@ Main logic for Music This Week.
 Home renders homepage
 User clicks Login, which redirects to Spotify Auth
 Spotify redirects to callback, which completes the login by getting an access token and then redirects to /setup
-In /setup, the user specifies serach args then presses the search button, which calls /search
+In /setup, the user specifies search args then presses the search button, which calls /search
 /search calls eventFinder with the search_args and then calls create_playlist with the list of artists
 After a playlist is created, it redirects to the playlist URL
 """
@@ -14,8 +14,8 @@ After a playlist is created, it redirects to the playlist URL
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 
-import backend
-from backend.spotifyHandler import PlaylistCreator
+from . import backend
+from .backend.spotifyHandler import PlaylistCreator
 
 
 def home(request):

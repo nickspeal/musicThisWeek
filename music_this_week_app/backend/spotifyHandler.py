@@ -8,9 +8,10 @@ Nick Speal 2016
 import sys
 import spotipy
 import spotipy.util as util
-from spotipy import oauth2 # for login
+from spotipy.oauth2 import SpotifyClientCredentials # For authenticating requests independent of user
+from spotipy import oauth2 # for user login
 from random import shuffle
-from music_this_week_app.models import Artist
+from ..models import Artist
 import os
 
 VERBOSE = False
@@ -19,8 +20,10 @@ class SpotifySearcher(object):
     """Handles unauthenticated Spotify requests like searching for artists and songs"""
 
     def __init__(self):
-        # Init unauthorized Spotify handle
-        self.sp = spotipy.Spotify()  # This should be the only instance attribute, to maintain statelessness
+        # Init anonymized Spotify handle
+        client_credentials_manager = SpotifyClientCredentials()
+        # This should be the only instance attribute, to maintain statelessness
+        self.sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
 
     def filter_list_of_artists(self, unfiltered_artists):
         """
@@ -76,7 +79,7 @@ class SpotifySearcher(object):
 
         :param artist_name: string
         :return: Spotify result or None if an exception is raised.
-        """   
+        """
         if VERBOSE:
             print ("\nSearching for artist on Spotify: " + artist_name)
         try:
@@ -136,7 +139,7 @@ class SpotifySearcher(object):
                     break
             # If there is no exact match, the first match is probably best.
             if no_exact_match:
-                artist_uri = artists[0]['uri']           
+                artist_uri = artists[0]['uri']
 
         return artist_uri
 
@@ -147,7 +150,7 @@ class SpotifySearcher(object):
         :param artist_uri: String
         :return None:
         """
-        
+
         Artist.objects.get_or_create(spotify_uri=artist_uri, name=artist_name)
 
     def get_song_list(self, artist_URIs, N=99, order="shuffled"):

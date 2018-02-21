@@ -4,6 +4,7 @@ from django.test import TestCase
 
 import music_this_week_app.backend.spotifyHandler as spotifyHandler
 from music_this_week_app.models import Artist
+import re
 
 class test_filter_list_of_artists(TestCase):
     """
@@ -140,7 +141,7 @@ class test_get_song_list(TestCase):
                        u'spotify:artist:1l8Fu6IkuTP0U5QetQJ5Xt', u'spotify:artist:16GcWuvvybAoaHr0NqT8Eh',
                        u'spotify:artist:4dpARuHxo51G3z768sgnrY', u'spotify:artist:2cCUtGK9sDU2EoElnk0GNB',
                        u'spotify:artist:6urkHDoIVO1WO8vNIwcJmM']
-        print "Running tests that search for songs. This takes a while, about 15 sec per search..."
+        print("Running tests that search for songs. This takes a while, about 15 sec per search...")
 
     def test_more_songs_than_artists(self):
         self.artist_URIs = self.artist_URIs[0:30]
@@ -199,7 +200,18 @@ class test_init_login(TestCase):
 
     def test_init_login_returned_url(self):
         url = self.pc.init_login()
-        self.assertTrue('https://accounts.spotify.com/authorize?scope=playlist-modify-public&redirect_uri=' in url)
+        patterns = [
+            r'https://accounts.spotify.com/authorize',
+            r'scope=playlist-modify-public',
+            r'redirect_uri=',
+            r'response_type=code',
+            r'client_id=',
+        ]
+        matches = [re.search(pattern, url) for pattern in patterns]
+
+        if None in matches:
+            print("Callback URL from spotify is missing a required component: ", url)
+        self.assertFalse(None in matches)
 
     def test_init_login_has_required_credentials(self):
         url = self.pc.init_login()
@@ -218,12 +230,12 @@ class test_mess_with_playlists(TestCase):
         self.pc = spotifyHandler.PlaylistCreator()
         self.username = 'nickspeal_test'
         self.playlist_name = 'musicThisWeek_test'
-        self.playlist_url = 'http://open.spotify.com/user/nickspeal_test/playlist/0EoNvCWUt0OMQ2XSOy0sTC'
+        self.playlist_url = u'https://open.spotify.com/user/nickspeal_test/playlist/0EoNvCWUt0OMQ2XSOy0sTC'
         self.pc.cli_login(self.username)
 
     def test_find_existing_playlist(self):
         url = self.pc.get_spotify_playlist(self.playlist_name)
-        print url
+        print(url)
         self.assertEqual(url, self.playlist_url)
 
     # Cannot test creation of a non-existent playlist because it would be annoying to clutter up with lots of playlists.
@@ -275,5 +287,3 @@ class test_cache_artists(TestCase):
         #this should make a new row for "Kanye" because lookup in DB cannot handle variant spellings
         self.searcher.filter_list_of_artists(['Kanye'])
         self.assertEqual(Artist.objects.count(), 2)
-         
-
