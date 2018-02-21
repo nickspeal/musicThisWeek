@@ -9,7 +9,7 @@ class test_integrations(TestCase):
         self.search_args = {'location': 'San+Francisco',
                             'start': '2016082100',
                             'end': '2016082800',
-                            'nResults': '100'}
+                            'nResults': '10'}
 
     def test_integration_end_to_end(self):
         """test end to end flow"""

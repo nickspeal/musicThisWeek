@@ -51,8 +51,11 @@ class EventFinder(object):
         else:
             nPages = number_of_available_results // EVENTFUL_RESULTS_PER_PAGE + 1
 
-        for pageNum in range(1,nPages+1):
-            # Assemble the Search Querie
+        # Accommodate searching for a small number of events
+        EVENTFUL_RESULTS_PER_PAGE = min(EVENTFUL_RESULTS_PER_PAGE, number_of_requested_results)
+
+        for pageNum in range(1,nPages):
+            # Assemble the Search Query
             url = self.assembleRequest(searchArgs, pageNum)
 
             # Submit the search query
@@ -160,4 +163,3 @@ class Event(object):
         self.date = datetime.strptime(self.date, "%Y-%m-%d  %H:%M:%S")
     def __repr__(self):
         return "Title: %r \nVenue: %r" % (self.title, self.venue_name)
-
