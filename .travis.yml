@@ -1,10 +1,13 @@
 language: python
 python:
   - "2.7"
-  # - "3.4"
-  # - "3.5"
+  - "3.6"
 before_install: openssl aes-256-cbc -K $encrypted_2114ab58a3d9_key -iv $encrypted_2114ab58a3d9_iv -in .cache-nickspeal_test.enc -out .cache-nickspeal_test -d
-install: pip install -r requirements.txt
+install:
+  pip install -r requirements.txt &&
+  python manage.py makemigrations music_this_week_app &&
+  python manage.py migrate
+
 env:
   global:
     - SPOTIPY_REDIRECT_URI='http://localhost:8888/callback'
@@ -15,5 +18,4 @@ env:
     - secure: "mV4qAo4O/s8dZ3r+mtNmj7nGqRIQMa+EbBBI0qEfrCrbwCxllNIQE3JRFJfvbR5Z60usmB7QvA8l/wJ9FTwYVzp0fEwZKz5mdDf1FSslx4AhYsKYwnR295XgkrmuJIUZ1Jkuro2LO73988FuJFPVNstdKTRDHlv2aQo6gjJAFSE12hhL0+xdPyxbJNYLX8+ja8mhAbuGLRfjEHBC/ujNm8JouZGIwwZLnwxTfvhPEa0iNlHNa4b46heFpbZuZDIRvluQkUjlSIhvUIm//TK+rxeXPKkP/YfWu7ewFqN5aWG/FS1auzzXwTJk4vh9GtxFoLc9zx5PfxYE5XQejhyrDpgr7ujJlvVqjqH+Q+HDk/H9Ll8CG2FWVLuoBTVayyt5GzB3gWY1+Fxlqs3I6S+45YXqM2haMr7M+GiNQl5J8q69XaF7gUUKA0xTDFV3QytN0igbHgwPxVFy7i8L7M/djiIhTXqVcj1sFWemiB4UFJK2O42GZTvq56kVUph1OnZuDWNYABoN9qSYXW8nWWTgQvJXv0gjmMKvTqRb7/EB03iPJC9uu6dpT2Qo3y3FcQhxM74MMmn6CrjFLZm1GtL6DYYe5oPh6cc0vcN4lAixlPgSzwzXQZCPBJ+k7lbWW1NjfuxGg2A0jHhRN0DCc6HDqP6LOeiwskfzaowXKyjIBa4="
     - secure: "QNnKWuevgdhMqlBvIOIknnP/z33Z4QDWyZ2gd2JvVoeowThJZQ+emLhZzVC7hHbNdhgdEUEkuR2OZxBtzUDhy3b+DC6XJadcridDTQjgg5min5EB3Cy7HEDw2eqNaXW+7asXsW6rC5CkVFi/ih2lrvHlVptB7T8ka5jXswPKiVzBzmmq3yOXb77bLyucz54eIraRPclmE0k8g6U16ZoHt+uukeJUH+83u097WTMdQyPAGxg77Z5gBrgriUnbgOs6w5jn31lfLoMjKO6QdYwB10c/JylSJnkriOR3kfGN05rvbYNc3qnd0wxqaXqMQL7aNap1WCgjnXbn3RycfslnuMztwYpg1kTbUzfd8qTc4lJ5QptSvghC9pdtp9SBZd2rcIDbUjLcbmaoTcGYr6nOeZgqnwtW+fPUEGqsfw1izIvaUCgxQFDPGFfAxRFsvssAKwTYRFN1QesyUqpvh/c476I7diMSLfrhfe2T0hxk0OJZGXmQhnCFPFj1a3QUtx5eoz81xNuorVFp5hF9w5qB9IQRSvoLYE4Ve8r+nbge5cwo5zlskg+M1A5h1ejl+Em6LhFGnqWaL+mSH+t/Z3eG/2LA6w4c5iHDV4/kK54ACzvOeCDRhfezUVjzE31TKfNOp8VDTrqEl3alAXYWRohJfQF6iSZxZnofUYncCKgm8q8="
 
-    
 script: python manage.py test

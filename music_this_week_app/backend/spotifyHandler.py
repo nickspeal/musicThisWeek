@@ -8,9 +8,10 @@ Nick Speal 2016
 import sys
 import spotipy
 import spotipy.util as util
-from spotipy import oauth2 # for login
+from spotipy.oauth2 import SpotifyClientCredentials # For authenticating requests independent of user
+from spotipy import oauth2 # for user login
 from random import shuffle
-
+from ..models import Artist
 import os
 
 VERBOSE = False
@@ -19,12 +20,15 @@ class SpotifySearcher(object):
     """Handles unauthenticated Spotify requests like searching for artists and songs"""
 
     def __init__(self):
-        # Init unauthorized Spotify handle
-        self.sp = spotipy.Spotify()  # This should be the only instance attribute, to maintain statelessness
+        # Init anonymized Spotify handle
+        client_credentials_manager = SpotifyClientCredentials()
+        # This should be the only instance attribute, to maintain statelessness
+        self.sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
 
     def filter_list_of_artists(self, unfiltered_artists):
         """
-        Turn a list of potential aritst names into a list or spotify artist URIs
+        Turn a list of potential artist names into a list of Spotify artist URIs
+        Filter out artists that cannot be found from the list.
 
         :param unfiltered_artists: list of strings of artist names
         :return artistURIs: list of strings of verified Spotify artist identifiers
@@ -38,36 +42,78 @@ class SpotifySearcher(object):
 
     def filter_artist(self, artist_name):
         """
-        Matches an artist name to an Artist URI on Spotify
+        Matches an artist name to a Spotify Artist URI
+        First checks the local database for a match and searches Spotify otherwise
 
         :param artist_name: string
         :return artistURI: Verified Spotify artist identifier. Return None if no match
         """
+
+        # Check if the artist is in the database
+        try:
+            artist_entry = Artist.objects.get(name = artist_name)
+            artist_uri = artist_entry.spotify_uri
+
+        # If the artist isn't in the database, search Spotify
+        except Artist.DoesNotExist:
+            result = self.search_spotify(artist_name)
+
+            # If there were any errors searching Spotify, don't continue
+            if result is not None:
+                artist_uri = self.filter_spotify_result(result, artist_name)
+            else:
+                artist_uri = None
+
+            # Save artist URI to the database for faster results next time
+            self.save_new_artist(artist_name, artist_uri)
+
+        return artist_uri
+
+    def search_spotify(self, artist_name):
+        """
+        Searches Spotify for an artist name and handles exceptions
+
+        The Spotify result is a JSON object containing an array of artist objects called 'items'
+        More info: https://developer.spotify.com/web-api/search-item/
+
+
+        :param artist_name: string
+        :return: Spotify result or None if an exception is raised.
+        """
         if VERBOSE:
-            print ("\nSearching for artist: " + artist_name)
+            print ("\nSearching for artist on Spotify: " + artist_name)
         try:
             result = self.sp.search(q='artist:' + artist_name, type='artist')
         except spotipy.client.SpotifyException:
-            print("ERROR: Couldnt not find artist: %s" % artist_name)
-            print("trying again")
+            print("ERROR: Couldnt not find artist: %s. Trying again." % artist_name)
             try:
                 result = self.sp.search(q='artist:' + artist_name, type='artist')
             except spotipy.client.SpotifyException as error:
                 print("ERROR: Failed to search twice. Error below:")
                 print(error)
-                return None
+                result = None
         except ValueError as error:
             print("ERROR: Failure while searching Spotify for artist: %s" % artist_name)
             print(error)
-            return None
+            result = None
+        return result
 
+    def filter_spotify_result(self, result, artist_name):
+        """
+        Given a Spotify result, which can contain multiple artists matching a search query,
+        identify and return the URI for the artist that best matches the query.
+
+        :param result: A result from Spotify API. More info: https://developer.spotify.com/web-api/search-item/
+        :param artist_name: String
+        :return artist_uri: String or None, the best artist_URI found or None if no artists in results
+        """
         artists = result['artists']['items']  # list of dicts
 
         num_matches = int(result['artists']['total'])
         if num_matches == 0:
             if VERBOSE:
-                print( "No matches found!")
-            return None
+                print("No matches found!")
+            artist_uri = None
 
         elif num_matches == 1:
             if VERBOSE:
@@ -76,22 +122,36 @@ class SpotifySearcher(object):
                     print ("Exact match!")
                 else:
                     print ("Close enough...")
-            return artists[0]['uri']
+            artist_uri = artists[0]['uri']
 
         elif num_matches > 1:
             if VERBOSE:
                 print ("%i matches found: " % num_matches + str([a['name'] for a in artists]) )
+
             # check for exact match
+            no_exact_match = True
             for a in artists:
                 if a['name'] == artist_name:
                     if VERBOSE:
                         print("Exact match found!")
-                    return a['uri']
+                    artist_uri = a['uri']
+                    no_exact_match = False
+                    break
             # If there is no exact match, the first match is probably best.
-            return artists[0]['uri']
+            if no_exact_match:
+                artist_uri = artists[0]['uri']
 
-        # If we don't return in one of the If statements above, abort
-        raise Exception('unexpected number of matches (%i) for artist %s' % (num_matches, artist))
+        return artist_uri
+
+    def save_new_artist(self, artist_name, artist_uri):
+        """
+        saves artist name/uri pairs to DB
+        :param artist_name: String
+        :param artist_uri: String
+        :return None:
+        """
+
+        Artist.objects.get_or_create(spotify_uri=artist_uri, name=artist_name)
 
     def get_song_list(self, artist_URIs, N=99, order="shuffled"):
         """

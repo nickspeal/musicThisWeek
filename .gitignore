@@ -1,6 +1,6 @@
-_private
 .cache-*
 *.pyc
 .idea
 mtw
+music_this_week_app/migrations
 !.cache-nickspeal_test.enc

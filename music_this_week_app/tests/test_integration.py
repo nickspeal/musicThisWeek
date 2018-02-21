@@ -7,8 +7,9 @@ from music_this_week_app.backend.spotifyHandler import PlaylistCreator
 class test_integrations(TestCase):
     def setUp(self):
         self.search_args = {'location': 'San+Francisco',
-                       'date': 'next+7+days',
-                       'nResults': '100'}
+                            'start': '2016082100',
+                            'end': '2016082800',
+                            'nResults': '10'}
 
     def test_integration_end_to_end(self):
         """test end to end flow"""

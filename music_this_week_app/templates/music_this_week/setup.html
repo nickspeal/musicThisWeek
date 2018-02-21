@@ -12,8 +12,8 @@
         <p><a href="{{ profile }}" target="_blank">{{ username }}</a>&nbsp; &nbsp;&nbsp;<a href="/login/?retry=true">Switch Users</a></p>
         <p><span style="text-decoration: underline;">Search Arguments:</span></p>
         <form action="/search" id="form">
-            <p><strong>Location:</strong> <input id = "loc_field" type="text" name="location" value="San Francisco"></p>
-            <p><strong>Time range:</strong> <input id = "date_field" type="text" name="date" value="Next 7 Days"></p>
+            <p><strong>Location:</strong> <input id = "loc_field" type="text" name="location" value="{{location}}"></p>
+            <p><strong>Date Range:</strong> <input id = "start_date" type="date" name="start">   to   <input id = "end_date" type="date" name="end"></p>
             <input hidden=true name="nResults" value="200">
             <button type="submit" id="search-button" onclick="buttonClick(this.form)">Search</button>
         </form>
@@ -22,6 +22,24 @@
     </div>
 
     <script>
+        /* Populate date range fields */
+
+        var start = new Date();
+        var end = new Date();
+
+        // Offset end date by desired number of days
+        end.setDate(start.getDate() + 7);
+
+        // Format strings for the date elements:
+        var start_formatted = start.toJSON().slice(0,10);
+        var end_formatted = end.toJSON().slice(0,10);
+
+        // Set element values
+        document.getElementById('start_date').value = start_formatted;
+        document.getElementById('end_date').value = end_formatted;
+
+
+        /* Search Button */
         //When Search button is pressed, change the UI and then submit the request.
         function buttonClick(form) {
             document.getElementById('search-button').innerHTML = "Searching...";

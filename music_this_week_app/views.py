@@ -5,7 +5,7 @@ Main logic for Music This Week.
 Home renders homepage
 User clicks Login, which redirects to Spotify Auth
 Spotify redirects to callback, which completes the login by getting an access token and then redirects to /setup
-In /setup, the user specifies serach args then presses the search button, which calls /search
+In /setup, the user specifies search args then presses the search button, which calls /search
 /search calls eventFinder with the search_args and then calls create_playlist with the list of artists
 After a playlist is created, it redirects to the playlist URL
 """
@@ -14,8 +14,8 @@ After a playlist is created, it redirects to the playlist URL
 from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseRedirect
 
-import backend
-from backend.spotifyHandler import PlaylistCreator
+from . import backend
+from .backend.spotifyHandler import PlaylistCreator
 
 
 def home(request):
@@ -86,7 +86,10 @@ def setup(request):
         print("ERROR: setup called without pc session. Redirecting home.")
         return HttpResponseRedirect('/')
 
-    context = pc.user_info
+    location = request.session.get('location')
+    if location is None:
+        location = 'San Francisco'
+    context = dict(pc.user_info, **{'location': location} )
     return render(request, 'music_this_week/setup.html', context)
 
 def search(request):
@@ -94,8 +97,8 @@ def search(request):
     # Parse request for search arguments
     search_args = dict(request.GET.items())
 
-    #Validate search arguments
-    if "location" not in search_args.keys() or "date" not in search_args.keys() or "nResults" not in search_args.keys():
+    # Validate search arguments
+    if "location" not in search_args.keys() or search_args["start"] == '' or search_args["end"] == '' or "nResults" not in search_args.keys():
         print("ERROR: Bad search arguments")
         print(search_args)
         resp = HttpResponse("Bad Search Arguments")
@@ -118,5 +121,8 @@ def search(request):
         resp = HttpResponse(error)
         resp.status_code = 400
         return resp
+
+    # Save user's search location as a cookie for next time
+    request.session['location'] = search_args.get('location')
 
     return HttpResponseRedirect(url)

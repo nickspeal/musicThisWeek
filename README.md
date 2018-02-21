@@ -1,8 +1,8 @@
-# musicThisWeek
+# Music This Week
 
-Generates a Spotify playlist of bands that are playing in your area in the near future.
+Music This Week is a music discovery service that generates a Spotify playlist of bands that are playing near you in the near future.
 
-## Consituent parts
+## Constituent parts
 
 Django web app: Site is called music_this_week, and the app is called music_this_week_app.
 
@@ -21,21 +21,10 @@ This is a personal hobby project, not intended for public use.
 Nick Speal 2016. All rights reserved.
 
 
-# Setup
-
-## Dependencies
-
-requests (2.9.1)
-
-[spotipy](https://spotipy.readthedocs.io/en/latest/) (2.3.8)
-
-django (1.9.7)
-
-grequests (0.3.0)
 
 ## Setup Instructions
 
-0. Create a virtual environment for your project.
+1. Create a virtual environment for your project.
 
     To keep your pip installation clean, we recommend using [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/en/latest/).
 
@@ -52,35 +41,20 @@ grequests (0.3.0)
 1. Install dependencies in your virtualenv from the root of the repo.
 
     ~~~~
-    $ pip install -r requirements.txt 
+    $ pip install -r requirements.txt
     ~~~~
 
-2. Create a config file called spotipyCreds.sh under a directory under the root called '_private':
+1. Create a config file called spotipyCreds.sh under a (gitignored) directory under the root called '_private':
 
     ~~~~
-    $ mkdir -p _private
     $ echo "
-    export SPOTIPY_CLIENT_ID='ask @nickspeal for the client ID'
-    export SPOTIPY_CLIENT_SECRET='ask @nickspeal for the secret'
+    export SPOTIPY_CLIENT_ID='Create a new app at developer.spotify.com to get this'
+    export SPOTIPY_CLIENT_SECRET='Create a new app at developer.spotify.com to get this'
     export SPOTIPY_REDIRECT_URI='http://localhost:8888/callback'
-    export DJANGO_SECRET_KEY='ask @nickspeal'
-    export EVENTFUL_KEY='ask @nickspeal'
+    export DJANGO_SECRET_KEY='make one up'
+    export EVENTFUL_KEY='Request an application key from https://api.eventful.com/keys'
     " > _private/spotipyCreds.sh
     ~~~~
-
-3. Source the private credentials you just wrote:
-
-    ~~~~
-    $ source _private/spotipyCreds.sh
-    ~~~~
-
-3. Run the Django database migration script:
-
-    ~~~~
-    $ python manage.py migrate
-    ~~~~
-
-4. Run the server by following the instructions in the next section:
 
 ## Running Instructions
 
@@ -94,10 +68,10 @@ grequests (0.3.0)
 
     This will source the credentials file, start the server, and open a browser for you!
 
-2. Follow instructions in the browser
+1. Follow instructions in the browser
 
-3. Play the playlist in the browser or find it automatically ready in the Spotify app.
- 
+1. Play the playlist in the browser or find it automatically ready in the Spotify app.
+
 
 # Documentation
 
@@ -127,5 +101,3 @@ For CLI Login:
 1. New user goes to the website, logs in for the first time, specifies search parameters, creates a playlist.
 2. Returning: User returns to the website, is automatically logged in and search params are loaded, creates a playlist _(Not done yet)_
 3. AutoRun: For each user, saved searches are repeated and playlists are updated periodically _(Not done yet)_
-
-

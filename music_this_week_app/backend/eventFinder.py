@@ -10,7 +10,8 @@ import os
 import time
 
 import grequests
-import requests
+import re
+
 
 EVENTFUL_RESULTS_PER_PAGE = 50  # (I think it is max 100, default 20)
 
@@ -62,7 +63,7 @@ class EventFinder(object):
 
         start_ms = time_ms()
         print('Request to %s' % url)
-        response = requests.get(url)
+        response = grequests.get(url)
         print('Request to ' + url + ' took ' + str(time_ms() - start_ms) + ' ms')
 
         if not request_was_successful(response):
@@ -77,7 +78,7 @@ class EventFinder(object):
 
     @staticmethod
     def parse_events(responses, total_pages):
-        """ Returns a list of events parsed from the eventful API """
+        """ Returns a list of Events parsed from the eventful API """
         events = []
         for page, response in enumerate(responses, start=1):
             if not request_was_successful(response):
@@ -104,7 +105,7 @@ class EventFinder(object):
         """
         print('Checking how many pages to crawl...')
         pages = self.get_total_pages_to_search(search_args)
-        urls = [self.assembleRequest(search_args, p) for p in range(1, pages + 1)] 
+        urls = [self.assembleRequest(search_args, p) for p in range(1, pages + 1)]
 
         print('Crawling %d pages from the eventful api...' % pages)
         start_ms = time_ms()
@@ -119,24 +120,34 @@ class EventFinder(object):
 
     @staticmethod
     def assembleRequest(searchArgs, pageNum, count_only=False):
-        '''Receives search parameters and returns a URL for the endpoint'''
+        """Receives search parameters and returns a URL for the endpoint
 
+        :param searchArgs: Dictionary of eventful search arguements
+        :param pageNum: Eventful page number
+        :param count_only: Flag for returning all results or just the number of results
+        :return URL: Eventful endpoint with the appropriate parameters
+        """
         filters = [ '',
                     'category=music', #seems to return the same results for music or concerts, so this might be unnecessary
                     'location=%s' %searchArgs['location'],
-                    'date=%s' %searchArgs['date'],
-                    'page_size=%s' %EVENTFUL_RESULTS_PER_PAGE,
+                    'date=%s' %self.parseDate(searchArgs['start'], searchArgs['end']),
+                    'page_size=%s' %min(EVENTFUL_RESULTS_PER_PAGE, int(searchArgs['nResults'])),
                     'page_number=%s' %pageNum,
                     'sort_order=popularity' #Customer Support says this should work but I see no evidence of it working
                    ]
         filterString = '&'.join(filters + ['count_only=true'] if count_only else filters)
-
-
         baseURL = 'http://api.eventful.com/json/events/search?app_key=%s' % EVENTFUL_KEY
-
         URL = baseURL + filterString
-
         return URL
+
+    def parseDate(self, start, end):
+        """
+        Converts the start and end dates from the HTML widget into eventful format
+        :param start: String, search range start date with format YYYY-MM-DD
+        :param end: String, search range end date with format YYYY-MM-DD
+        :return parsedDate: String, search range with format YYYYMMDD00-YYYYMMDD00
+        """
+        return re.sub('-', '', start) + '00-' + re.sub('-','', end) + '00'
 
     def generateListOfArtists(self):
         for event in self.upcomingEvents:
