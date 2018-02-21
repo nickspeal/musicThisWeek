@@ -2,7 +2,7 @@
 
 Music This Week is a music discovery service that generates a Spotify playlist of bands that are playing near you in the near future.
 
-## Consituent parts
+## Constituent parts
 
 Django web app: Site is called music_this_week, and the app is called music_this_week_app.
 
@@ -21,36 +21,56 @@ This is a personal hobby project, not intended for public use.
 Nick Speal 2016. All rights reserved.
 
 
-# Setup
 
-## Instructions
+## Setup Instructions
 
-1. You'll probably want to activate a virtualenv.
-1. Install dependencies
+1. Create a virtual environment for your project.
 
-	~~~~
-	pip install -r requirements.txt
-	~~~~
+    To keep your pip installation clean, we recommend using [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/en/latest/).
 
-1. create a config file in the `_private` directory (gitignored) called spotipyCreds.sh:
+    ~~~~
+    $ mkvirtualenv mtw
+    ~~~~
 
-	~~~~
-	export SPOTIPY_CLIENT_ID='ask me for the client ID'
+    Anytime you want to run this project, run:
 
-	export SPOTIPY_CLIENT_SECRET='ask me for the secret'
+    ~~~~
+    $ workon mtw
+    ~~~~
 
-	export SPOTIPY_REDIRECT_URI='http://localhost:8888/callback'
+1. Install dependencies in your virtualenv from the root of the repo.
 
-	export DJANGO_SECRET_KEY='ask me'
+    ~~~~
+    $ pip install -r requirements.txt
+    ~~~~
 
-    export EVENTFUL_KEY='ask me'
-	~~~~
+1. Create a config file called spotipyCreds.sh under a (gitignored) directory under the root called '_private':
 
-1. `sh run.sh` This will source the above file, start the server, and open a browser for you!
+    ~~~~
+    $ echo "
+    export SPOTIPY_CLIENT_ID='Create a new app at developer.spotify.com to get this'
+    export SPOTIPY_CLIENT_SECRET='Create a new app at developer.spotify.com to get this'
+    export SPOTIPY_REDIRECT_URI='http://localhost:8888/callback'
+    export DJANGO_SECRET_KEY='make one up'
+    export EVENTFUL_KEY='Request an application key from https://api.eventful.com/keys'
+    " > _private/spotipyCreds.sh
+    ~~~~
+
+## Running Instructions
+
+1. Run `sh run.sh` from the root of the repo in your project's virtualenv.
+
+    (Prereq: Make sure you already ran the setup instructions at some previous point.)
+
+    ~~~~
+    $ sh run.sh
+    ~~~~
+
+    This will source the credentials file, start the server, and open a browser for you!
 
 1. Follow instructions in the browser
 
-1. Play the playlist in the browser or find it automatically ready in the Spotify app
+1. Play the playlist in the browser or find it automatically ready in the Spotify app.
 
 
 # Documentation
