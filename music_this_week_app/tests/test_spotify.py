@@ -4,6 +4,7 @@ from django.test import TestCase
 
 import music_this_week_app.backend.spotifyHandler as spotifyHandler
 from music_this_week_app.models import Artist
+import re
 
 class test_filter_list_of_artists(TestCase):
     """
@@ -199,7 +200,9 @@ class test_init_login(TestCase):
 
     def test_init_login_returned_url(self):
         url = self.pc.init_login()
-        self.assertTrue('https://accounts.spotify.com/authorize?scope=playlist-modify-public&redirect_uri=' in url)
+        pattern = r'https://accounts.spotify.com/authorize\?client_id=(.*)&response_type=code&redirect_uri=(.*)&scope=playlist-modify-public'
+        match = re.search(pattern, url)
+        self.assertTrue(match is not None)
 
     def test_init_login_has_required_credentials(self):
         url = self.pc.init_login()
