@@ -52,6 +52,7 @@ def login(request):
 def callback(request):
     """Response from Spotify Authentication comes to this endpoint with a code to continue"""
     # Load PlaylistCreator
+
     pc = request.session.get('pc')
     if pc is None:
         print("ERROR: callback called without pc session. Redirecting home.")

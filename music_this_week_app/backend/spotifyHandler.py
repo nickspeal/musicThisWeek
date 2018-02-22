@@ -216,15 +216,17 @@ class PlaylistCreator(object):
         self.sp = None # created in login or cli_login
 
     def init_login(self):
+        print("init login called with sp oauth: ", self.sp_oauth)
         client_id=os.getenv('SPOTIPY_CLIENT_ID')
         client_secret = os.getenv('SPOTIPY_CLIENT_SECRET')
         redirect_uri = os.getenv('SPOTIPY_REDIRECT_URI')
         scope = 'playlist-modify-public'
-        print("print creds: ", client_id)
         self.sp_oauth = oauth2.SpotifyOAuth(client_id, client_secret, redirect_uri, scope=scope)
+        print("init login updated sp oauth: ", self.sp_oauth)
         return self.sp_oauth.get_authorize_url()
 
     def login(self, code):
+        print("login called with sp oauth: ", self.sp_oauth)
         token = self.sp_oauth.get_access_token(code)
         self.complete_login(token['access_token'])
 
