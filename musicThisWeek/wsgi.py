@@ -13,4 +13,6 @@ from django.core.wsgi import get_wsgi_application
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "musicThisWeek.settings")
 
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
+print("Found this secret key as an environment variable: ", SECRET_KEY)
 application = get_wsgi_application()
