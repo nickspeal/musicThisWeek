@@ -4,3 +4,8 @@
 mtw
 music_this_week_app/migrations
 !.cache-nickspeal_test.enc
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
