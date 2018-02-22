@@ -1,24 +1,55 @@
+{% load staticfiles %}
 <!DOCTYPE html>
 <html>
 <head>
-    <title>
-        Music This Week: Setup
-    </title>
+  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+  <link rel="stylesheet" href="{% static 'styles.css' %}">
+  <title>
+    Music This Week: Setup
+  </title>
 </head>
 <body>
-    <div class="wrapper" style="text-align: center;">
+    <div class="hero">
         <h1>Welcome, {{ display_name }}!</h1>
-        <p>&nbsp;<strong><img src="{{ profile_photo }}" alt="User Profile Photo for {{ username }}" /></strong></p>
-        <p><a href="{{ profile }}" target="_blank">{{ username }}</a>&nbsp; &nbsp;&nbsp;<a href="/login/?retry=true">Switch Users</a></p>
-        <p><span style="text-decoration: underline;">Search Arguments:</span></p>
+        <div>
+          <img src="{{ profile_photo }}" alt="User Profile Photo for {{ username }}" />
+        </div>
+        <div class="profile-links">
+          <a href="{{ profile }}" target="_blank">{{ username }}</a>
+          <a href="/login/?retry=true">Switch Users</a>
+        </div>
+
+        <h3>FIND MUSIC THIS WEEK:</h3>
         <form action="/search" id="form">
-            <p><strong>Location:</strong> <input id = "loc_field" type="text" name="location" value="{{location}}"></p>
-            <p><strong>Date Range:</strong> <input id = "start_date" type="date" name="start">   to   <input id = "end_date" type="date" name="end"></p>
-            <input hidden=true name="nResults" value="200">
-            <button type="submit" id="search-button" onclick="buttonClick(this.form)">Search</button>
+            <input
+              id = "loc_field"
+              type="text"
+              name="location"
+              value="{{location}}"
+              placeholder= "Location"
+            >
+            <div class="dates">
+              <input
+                id="start_date"
+                type="date"
+                name="start"
+                placeholder="start"
+              >
+              <span>to</span>
+              <input
+                id="end_date"
+                type="date"
+                name="end"
+                placeholder="end"
+              >
+          </div>
+            <input class="button" hidden=true name="nResults" value="200">
+            <button type="submit" id="search-button" onclick="buttonClick(this.form)">SEARCH</button>
         </form>
-        <p>&nbsp;</p>
-        <p id="wait-text" hidden="True">Please be patient. In few minutes a playlist called musicThisWeek will appear in your spotify app.<br><br>If you close this page, the playlist will still be created in the background.</p>
+        <p id="wait-text" hidden="True">
+          Please be patient. In few minutes a playlist called musicThisWeek will appear in your spotify app.<br><br>If you close this page, the playlist will still be created in the background.
+        </p>
     </div>
 
     <script>
