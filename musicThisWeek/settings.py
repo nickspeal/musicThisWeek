@@ -25,7 +25,7 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['159.203.246.166', 'mtw.speal.ca', 'localhost']
+ALLOWED_HOSTS = ['159.203.246.166', 'mtw.speal.ca', 'localhost', 'musicthisweek.us-west-1.elasticbeanstalk.com']
 
 
 # Application definition
