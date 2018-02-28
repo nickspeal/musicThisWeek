@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  web:
+    build: .
+    command: apache2ctl -D FOREGROUND
+    volumes:
+      - .:/code
+    ports:
+      - "8888:80"
