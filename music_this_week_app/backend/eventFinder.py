@@ -9,7 +9,8 @@ from datetime import datetime
 import os
 import time
 
-import grequests
+# THIS IMPORT CAUSES SOME WEIRD ERROR TO BE THROWN! Use a different library. See note in readme: https://github.com/kennethreitz/grequests
+# import grequests
 import requests
 import re
 
@@ -119,7 +120,9 @@ class EventFinder(object):
 
         print('Crawling %d pages from the eventful api...' % pages)
         start_ms = time_ms()
-        responses = grequests.map(grequests.get(u) for u in urls)
+        # Fancy async lib has issues.
+        # responses = grequests.map(grequests.get(u) for u in urls)
+        responses = [requests.get(u) for u in urls]
         print('Crawling took ' + str(time_ms() - start_ms) + ' ms')
 
         events = self.parse_events(responses, pages)
