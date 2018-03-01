@@ -17,6 +17,10 @@ import os
 VERBOSE = False
 
 def is_token_valid(token):
+    if token is None:
+        print("Token is missing.")
+        return False
+
     _sp = spotipy.Spotify(auth=token) # is this enough?
     try:
         print(_sp.me())
