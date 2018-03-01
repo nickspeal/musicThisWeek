@@ -16,6 +16,15 @@ import os
 
 VERBOSE = False
 
+def is_token_valid(token):
+    _sp = spotipy.Spotify(auth=token) # is this enough?
+    try:
+        print(_sp.me())
+        return True
+    except spotipy.client.SpotifyException:
+        print("Bad token: ", token)
+        return False
+
 class SpotifySearcher(object):
     """Handles unauthenticated Spotify requests like searching for artists and songs"""
 

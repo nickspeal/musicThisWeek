@@ -2,3 +2,4 @@ grequests==0.3.0
 spotipy==2.4.4
 django==1.11.1
 requests==2.9.1
+django-cors-headers

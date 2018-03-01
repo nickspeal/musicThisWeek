@@ -10,119 +10,56 @@ In /setup, the user specifies search args then presses the search button, which 
 After a playlist is created, it redirects to the playlist URL
 """
 
-
+from django.views.generic import View
 from django.shortcuts import render
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseForbidden, HttpResponseBadRequest, HttpResponseRedirect, JsonResponse
+import json
 
 from . import backend
 from .backend.spotifyHandler import PlaylistCreator
+from .backend.spotifyHandler import is_token_valid
 
+class Create(View):
+    allowed_methods = ['post', 'options']
 
-def home(request):
-    """Show the user a home page with a button to get started"""
-    context = {}
-    return render(request, 'music_this_week/home.html', context)
+    def options(self, request):
+        response = HttpResponse()
+        response['allow'] = ','.join(self.allowed_methods)
+        return response
 
+    def post(self, request):
+        """ Search for shows and create playlist then redirect to it"""
+        body = json.loads(request.body)
+        print("Got POST request with body: ", body)
 
-def login(request):
-    """Redirects user to Spotify Login page"""
+        if not is_token_valid(body['spotify_token']):
+            return HttpResponseForbidden('spotify_token is not valid')
 
-    # Instantiate a PlaylistCreator object for this user.
-    pc = PlaylistCreator()
+        # Parse request for search arguments
+        search_args = body
 
-    # Ask Spotify for a login URL to send users to
-    auth_url = pc.init_login()
+        # Validate search arguments
+        if "location" not in search_args.keys() or search_args["start"] == '' or search_args["end"] == '' or "nResults" not in search_args.keys():
+            print("ERROR: Bad search arguments")
+            print(search_args)
+            resp = HttpResponseBadRequest("Bad Search Arguments")
+            return resp
 
+        # Load PlaylistCreator
+        pc = PlaylistCreator()
+        pc.complete_login(body['spotify_token'])
 
-    retry = request.GET.get('retry')
-    print("Talking to Spotify. Redirecting for authorization with retry = %s" % retry)
-    if retry == 'true':
-        auth_url = auth_url + '&show_dialog=True'
+        # Main heavy lifting happens in the background
+        # TODO do this asyncronously! Create and return and empyty playlist and then go from there!
+        (url, error) = backend.execute(pc, search_args)
 
-    # Save PlaylistCreator instance
-    # TODO SECURITY ISSUE: Pickle Session Serialization is unsafe
-    request.session['pc'] = pc
+        if error is not None:
+            print("Error in backend execute: ", error)
+            resp = HttpResponseBadRequest(error)
+            return resp
 
-    # Set session to expire when the browser closes
-    request.session.set_expiry(0)
+        r = {
+            'playlist': url
+        }
 
-    return HttpResponseRedirect(auth_url)
-
-
-def callback(request):
-    """Response from Spotify Authentication comes to this endpoint with a code to continue"""
-    # Load PlaylistCreator
-    pc = request.session.get('pc')
-    if pc is None:
-        print("ERROR: callback called without pc session. Redirecting home.")
-        return HttpResponseRedirect('/')
-
-    # Check for login error
-    # for example, if the user hits cancel, we get "error=access_denied"
-    error_message = request.GET.get('error')
-    if error_message is not None:
-        print("ERROR: Could not authenticate with Spotify")
-        print(error_message)
-        return HttpResponseRedirect('/')
-
-    # Parse out code from Spotify's request
-    code = request.GET.get('code')
-
-    # Log in to Spotify with the code
-    pc.login(code)
-
-    # Save PlaylistCreator instance
-    request.session['pc'] = pc
-
-    return HttpResponseRedirect('/setup')
-
-
-def setup(request):
-    """Displays search args and a search button, which links to /search"""
-
-    # Fetch user data
-    pc = request.session.get('pc')
-    if pc is None:
-        print("ERROR: setup called without pc session. Redirecting home.")
-        return HttpResponseRedirect('/')
-
-    location = request.session.get('location')
-    if location is None:
-        location = 'San Francisco'
-    context = dict(pc.user_info, **{'location': location} )
-    return render(request, 'music_this_week/setup.html', context)
-
-def search(request):
-    """ Search for shows and create playlist then redirect to it"""
-    # Parse request for search arguments
-    search_args = dict(request.GET.items())
-
-    # Validate search arguments
-    if "location" not in search_args.keys() or search_args["start"] == '' or search_args["end"] == '' or "nResults" not in search_args.keys():
-        print("ERROR: Bad search arguments")
-        print(search_args)
-        resp = HttpResponse("Bad Search Arguments")
-        resp.status_code = 400
-        return resp
-
-    # Load PlaylistCreator
-    pc = request.session.get('pc')
-    if pc is None:
-        print("ERROR: search called without pc session. Redirecting home.")
-        return HttpResponseRedirect('/')
-
-    # Main heavy lifting happens in the background
-    (url, error) = backend.execute(pc, search_args)
-
-    # Save PlaylistCreator instance, just in case
-    request.session['pc'] = pc
-
-    if error is not None:
-        resp = HttpResponse(error)
-        resp.status_code = 400
-        return resp
-
-    # Save user's search location as a cookie for next time
-    request.session['location'] = search_args.get('location')
-
-    return HttpResponseRedirect(url)
+        return JsonResponse(r)
