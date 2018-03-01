@@ -40,7 +40,7 @@ def execute(playlist_creator, search_args):
     song_list = searcher.get_song_list(artist_URIs, N=99, order='shuffled')
 
     # Get Playlist ID
-    playlistURL = playlist_creator.get_spotify_playlist("musicThisWeek")
+    playlistURL = playlist_creator.get_spotify_playlist("Music This Week")
 
     # Populate Playlist
     playlist_creator.erase(playlistURL)
