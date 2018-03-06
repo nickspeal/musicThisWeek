@@ -21,7 +21,7 @@ def is_token_valid(token):
         print("Token is missing.")
         return False
 
-    _sp = spotipy.Spotify(auth=token) # is this enough?
+    _sp = spotipy.Spotify(auth=token)
     try:
         print(_sp.me())
         return True

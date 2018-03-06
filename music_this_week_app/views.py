@@ -19,6 +19,21 @@ from . import backend
 from .backend.spotifyHandler import PlaylistCreator
 from .backend.spotifyHandler import is_token_valid
 
+def get_token(request):
+    try:
+        header = request.META['HTTP_AUTHORIZATION']
+    except KeyError:
+        print('Error: HTTP Authorization header is missing. Headers included:', request.META)
+        return None
+
+    try:
+        token = header.split('Bearer: ')[1]
+    except IndexError:
+        print('Error: Authorization Header must contain the string "Bearer: "')
+        return None
+    return token
+
+
 class Create(View):
     allowed_methods = ['post', 'options']
 
@@ -32,8 +47,9 @@ class Create(View):
         body = json.loads(request.body)
         print("Got POST request with body: ", body)
 
-        if not is_token_valid(body['spotify_token']):
-            return HttpResponseForbidden('spotify_token is not valid')
+        token = get_token(request)
+        if not is_token_valid(token):
+            return HttpResponseForbidden('spotify token is not valid')
 
         # Parse request for search arguments
         search_args = body
@@ -47,7 +63,7 @@ class Create(View):
 
         # Load PlaylistCreator
         pc = PlaylistCreator()
-        pc.complete_login(body['spotify_token'])
+        pc.complete_login(token)
 
         # Main heavy lifting happens in the background
         # TODO do this asyncronously! Create and return and empyty playlist and then go from there!
