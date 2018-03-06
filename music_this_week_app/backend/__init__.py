@@ -24,29 +24,36 @@ def execute(playlist_creator, search_args):
     if not playlist_creator.is_logged_in():
         return None, "Error: User is not logged in"
 
-    # Search for list of upcoming artists
-    ef = eventFinder.EventFinder()
-    ef.searchForEvents(search_args)
-    artists = ef.performers
-
-    # Validate and filter artists
-    print("Searching for %i artists on Spotify..." % len(artists))
-    artist_URIs = searcher.filter_list_of_artists(artists)
-    if len(artist_URIs) == 0:
-        return None, "No results found."
-
-    # Create List of Songs (track URIs)
-    print ("%i artists found on Spotify. Creating a playlist..." % len(artist_URIs))
-    song_list = searcher.get_song_list(artist_URIs, N=99, order='shuffled')
-
     # Get Playlist ID
     playlistURL = playlist_creator.get_spotify_playlist("Music This Week")
+    print("Playlist URL is", playlistURL)
 
-    # Populate Playlist
+    # Erase Playlist
     playlist_creator.erase(playlistURL)
-    playlist_creator.add(playlistURL, song_list)
 
-    print("\n\nSuccessfully Created a playlist! Give it a listen:")
-    print(playlistURL)
+    # TODO Search for artists and populate the playlist here!
 
     return playlistURL, None
+
+
+
+    # # Search for list of upcoming artists
+    # ef = eventFinder.EventFinder()
+    # ef.searchForEvents(search_args)
+    # artists = ef.performers
+    #
+    # # Validate and filter artists
+    # print("Searching for %i artists on Spotify..." % len(artists))
+    # artist_URIs = searcher.filter_list_of_artists(artists)
+    # if len(artist_URIs) == 0:
+    #     return None, "No results found."
+    #
+    # # Create List of Songs (track URIs)
+    # print ("%i artists found on Spotify. Creating a playlist..." % len(artist_URIs))
+    # song_list = searcher.get_song_list(artist_URIs, N=99, order='shuffled')
+    #
+    # # Populate Playlist
+    # playlist_creator.add(playlistURL, song_list)
+    #
+    # print("\n\nSuccessfully Created a playlist! Give it a listen:")
+    # print(playlistURL)
