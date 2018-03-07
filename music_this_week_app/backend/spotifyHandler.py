@@ -23,7 +23,8 @@ def is_token_valid(token):
 
     _sp = spotipy.Spotify(auth=token)
     try:
-        print(_sp.me())
+        me = _sp.me()
+        print("Valid token for {}".format(me["id"]))
         return True
     except spotipy.client.SpotifyException:
         print("Bad token: ", token)
