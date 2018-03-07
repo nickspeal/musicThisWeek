@@ -15,26 +15,41 @@ from django.shortcuts import render
 from django.http import HttpResponse, HttpResponseForbidden, HttpResponseBadRequest, HttpResponseRedirect, JsonResponse
 import json
 
-from . import backend
-from .backend.spotifyHandler import is_token_valid
-
-def get_token(request):
-    try:
-        header = request.META['HTTP_AUTHORIZATION']
-    except KeyError:
-        print('Error: HTTP Authorization header is missing. Headers included:', request.META)
-        return None
-
-    try:
-        token = header.split('Bearer: ')[1]
-    except IndexError:
-        print('Error: Authorization Header must contain the string "Bearer: "')
-        return None
-    return token
-
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+from .backend.spotifyHandler import PlaylistCreator, is_token_valid
 
 class Create(View):
     allowed_methods = ['post', 'options']
+
+    def _get_token(self, request):
+        try:
+            header = request.META['HTTP_AUTHORIZATION']
+        except KeyError:
+            print('Error: HTTP Authorization header is missing. Headers included:', request.META)
+            return None
+
+        try:
+            token = header.split('Bearer: ')[1]
+        except IndexError:
+            print('Error: Authorization Header must contain the string "Bearer: "')
+            return None
+        return token
+
+    def _valid_search_args(search_args):
+        if "location" not in search_args.keys():
+            print("Error: Location missing from search arguments", search_args)
+            return False
+        if "nResults" not in search_args.keys():
+            print("Error: nResults missing from search arguments", search_args)
+            return False
+        if search_args["start"] == '':
+            print("Error: Start Date missing from search arguments", search_args)
+            return False
+        if search_args["end"] == '':
+            print("Error: End Date missing from search arguments", search_args)
+            return False
+        return True
 
     def options(self, request):
         response = HttpResponse()
@@ -42,35 +57,40 @@ class Create(View):
         return response
 
     def post(self, request):
-        """ Search for shows and create playlist then redirect to it"""
+        """ """
         body = json.loads(request.body)
         print("Got POST request with body: ", body)
 
-        token = get_token(request)
+        # VALIDATE TOKEN
+        token = self._get_token(request)
         if not is_token_valid(token):
             return HttpResponseForbidden('spotify token is not valid')
 
+        # VALIDATE SEARCH ARGS
         # Parse request for search arguments
         search_args = body
+        if not self._valid_search_args(search_args):
+            return HttpResponseBadRequest("Bad Search Arguments")
 
-        # Validate search arguments
-        if "location" not in search_args.keys() or search_args["start"] == '' or search_args["end"] == '' or "nResults" not in search_args.keys():
-            print("ERROR: Bad search arguments")
-            print(search_args)
-            resp = HttpResponseBadRequest("Bad Search Arguments")
-            return resp
+        # Load PlaylistCreator
+        playlist_creator = PlaylistCreator()
+        playlist_creator.complete_login(token)
 
-        # Main heavy lifting happens in the background
-        # TODO do this asyncronously! Create and return and empyty playlist and then go from there!
-        (url, error) = backend.execute(token, search_args)
+        # Get Playlist ID
+        playlistURL = playlist_creator.get_spotify_playlist("Music This Week")
 
-        if error is not None:
-            print("Error in backend execute: ", error)
-            resp = HttpResponseBadRequest(error)
-            return resp
+        # Erase Playlist
+        playlist_creator.erase(playlistURL)
 
-        r = {
-            'playlist': url
-        }
+        # Asynchronously populate playlist
+        async_to_sync(get_channel_layer().send)(
+            "search",
+            {
+                "type": "search",
+                "playlist": playlistURL,
+                "search_args": search_args,
+                "token": token,
+            },
+        )
 
-        return JsonResponse(r)
+        return JsonResponse({ "playlist": playlistURL })
