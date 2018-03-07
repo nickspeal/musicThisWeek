@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'corsheaders',
+    'channels'
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -80,7 +81,27 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'musicThisWeek.wsgi.application'
+ASGI_APPLICATION = 'musicThisWeek.routing.application'
 
+# REDIS related settings
+REDIS_HOST = 'localhost'
+REDIS_PORT = '6379'
+BROKER_URL = 'redis://' + REDIS_HOST + ':' + REDIS_PORT + '/0'
+BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 3600}
+CELERY_RESULT_BACKEND = 'redis://' + REDIS_HOST + ':' + REDIS_PORT + '/0'
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [(
+                REDIS_HOST,
+                REDIS_PORT,
+            )],
+            # "symmetric_encryption_keys": [SECRET_KEY],
+        },
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases
@@ -91,6 +112,7 @@ DATABASES = {
         'NAME': os.path.join(BASE_DIR, '_private/db.sqlite3'),
     }
 }
+
 
 
 # Password validation

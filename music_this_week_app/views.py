@@ -16,7 +16,6 @@ from django.http import HttpResponse, HttpResponseForbidden, HttpResponseBadRequ
 import json
 
 from . import backend
-from .backend.spotifyHandler import PlaylistCreator
 from .backend.spotifyHandler import is_token_valid
 
 def get_token(request):
@@ -61,13 +60,9 @@ class Create(View):
             resp = HttpResponseBadRequest("Bad Search Arguments")
             return resp
 
-        # Load PlaylistCreator
-        pc = PlaylistCreator()
-        pc.complete_login(token)
-
         # Main heavy lifting happens in the background
         # TODO do this asyncronously! Create and return and empyty playlist and then go from there!
-        (url, error) = backend.execute(pc, search_args)
+        (url, error) = backend.execute(token, search_args)
 
         if error is not None:
             print("Error in backend execute: ", error)

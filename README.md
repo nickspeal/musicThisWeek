@@ -44,6 +44,12 @@ Nick Speal 2016. All rights reserved.
     $ pip install -r requirements.txt
     ~~~~
 
+1. Also install Redis:
+
+  ~~~~
+  $ brew install redis
+  ~~~~
+
 1. Create a config file called spotipyCreds.sh under a (gitignored) directory under the root called '_private':
 
     ~~~~

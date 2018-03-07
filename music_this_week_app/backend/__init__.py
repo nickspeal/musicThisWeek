@@ -3,14 +3,12 @@ Main backend master that handles all the high level logic for execution.
 This keeps views.py lightweight.
 """
 
-from . import eventFinder
-from .spotifyHandler import SpotifySearcher
 
-# Instantiate object used for handling Spotify requests without authorization, i.e. searching
-searcher = SpotifySearcher()
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+from .spotifyHandler import PlaylistCreator
 
-
-def execute(playlist_creator, search_args):
+def execute(token, search_args):
     """
     Main Search and Create Playlist Flow
 
@@ -19,6 +17,10 @@ def execute(playlist_creator, search_args):
     :return playlistURL: URL for the spotify playlist. None if one was not created
     :return error: Error message, None if not applicable
     """
+
+    # Load PlaylistCreator
+    playlist_creator = PlaylistCreator()
+    playlist_creator.complete_login(token)
 
     # Validate user is logged in
     if not playlist_creator.is_logged_in():
@@ -33,27 +35,16 @@ def execute(playlist_creator, search_args):
 
     # TODO Search for artists and populate the playlist here!
 
+    channel_layer = get_channel_layer()
+    print("About to call background search task")
+    async_to_sync(channel_layer.send)(
+        "search",
+        {
+            "type": "search",
+            "playlist": playlistURL,
+            "search_args": search_args,
+            "token": token,
+        },
+    )
+
     return playlistURL, None
-
-
-
-    # # Search for list of upcoming artists
-    # ef = eventFinder.EventFinder()
-    # ef.searchForEvents(search_args)
-    # artists = ef.performers
-    #
-    # # Validate and filter artists
-    # print("Searching for %i artists on Spotify..." % len(artists))
-    # artist_URIs = searcher.filter_list_of_artists(artists)
-    # if len(artist_URIs) == 0:
-    #     return None, "No results found."
-    #
-    # # Create List of Songs (track URIs)
-    # print ("%i artists found on Spotify. Creating a playlist..." % len(artist_URIs))
-    # song_list = searcher.get_song_list(artist_URIs, N=99, order='shuffled')
-    #
-    # # Populate Playlist
-    # playlist_creator.add(playlistURL, song_list)
-    #
-    # print("\n\nSuccessfully Created a playlist! Give it a listen:")
-    # print(playlistURL)
