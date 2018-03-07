@@ -41,6 +41,13 @@ class SearchConsumer(SyncConsumer):
         current_consumer_channel_name = self.channel_name
         async_to_sync(self.channel_layer.group_add)(group_channel_name, current_consumer_channel_name)
 
+        # Initialize the song consumer
+        async_to_sync(self.channel_layer.send)('song', {
+            'type': 'login',
+            'playlist': self.playlist,
+            'token': self.token,
+        })
+
         # Search for list of upcoming artists
         ef = eventFinder.EventFinder()
         ef.searchForEvents(message["search_args"], onProgress=self._broadcast_events_found)
@@ -74,19 +81,37 @@ class SearchConsumer(SyncConsumer):
                         "artist": artist,
                     })
 
-    def song_found(self, message):
-        """Add songs to spotify playlist. Log in the first time."""
-        print("song found: ", message)
-        if not self.playlist_creator:
-            self.playlist_creator = PlaylistCreator()
-            self.playlist_creator.complete_login(self.token)
-        self.playlist_creator.add(self.playlist, message.get('songs'))
+    # This Consumer shouldn't care. The SongAddConsumer and (optional, if there's a client) Subscribe consumer do care.
+    # A minimum of 1 handler on the group must exist
+    # def song_found(self, message):
+    #     """Add songs to spotify playlist. Log in the first time."""
+    #     print("Group message received - song found")
+    #     if not self.playlist_creator:
+    #         self.playlist_creator = PlaylistCreator()
+    #         self.playlist_creator.complete_login(self.token)
+    #     self.playlist_creator.add(self.playlist, message.get('songs'))
 
     def song_not_found(self, content):
-        print("song not found", content)
+        # print("song not found", content)
         # TODO maybe remove the artist from the playlist DB or something
         # I need this placeholder for now so that there is some receipient of the message in the group if the client disconnects.
         pass
+
+class SongAddConsumer(SyncConsumer):
+    def login(self, message):
+        print('logging in to spotify')
+        self.playlist = message.get('playlist')
+        self.playlist_creator = PlaylistCreator()
+        self.playlist_creator.complete_login(message.get('token'))
+
+        # Subscribe to the playlist group
+        group_channel_name = self.playlist[-PLAYLIST_ID_LENGTH:]
+        current_consumer_channel_name = self.channel_name
+        async_to_sync(self.channel_layer.group_add)(group_channel_name, current_consumer_channel_name)
+
+    def song_found(self, message):
+        """Add songs to spotify playlist."""
+        self.playlist_creator.add(self.playlist, message.get('songs'))
 
 
 class Subscribe(JsonWebsocketConsumer):
