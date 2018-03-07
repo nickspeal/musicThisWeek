@@ -1,4 +1,4 @@
-# from django.conf.urls import url
+from django.conf.urls import url
 
 from channels.routing import ProtocolTypeRouter, URLRouter, ChannelNameRouter
 # from channels.auth import AuthMiddlewareStack
@@ -15,6 +15,9 @@ application = ProtocolTypeRouter({
     #     ])
     # ),
     "channel": ChannelNameRouter({
-        "search": consumers.SearchConsumer,
-    })
+        "search": consumers.Search,
+    }),
+    "websocket": URLRouter([
+        url("^subscribe", consumers.Subscribe)
+    ])
 })

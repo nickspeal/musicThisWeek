@@ -86,7 +86,7 @@ class Create(View):
         async_to_sync(get_channel_layer().send)(
             "search",
             {
-                "type": "search",
+                "type": "start_search",
                 "playlist": playlistURL,
                 "search_args": search_args,
                 "token": token,
