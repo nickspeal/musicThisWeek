@@ -9,13 +9,14 @@ from datetime import datetime
 import os
 import time
 
-# THIS IMPORT CAUSES SOME WEIRD ERROR TO BE THROWN! Use a different library. See note in readme: https://github.com/kennethreitz/grequests
-# import grequests
 import requests
 import re
+import json
 
 
 EVENTFUL_RESULTS_PER_PAGE = 50  # (I think it is max 100, default 20)
+# Number of characters to strip off the playlist URL and call it a unique ID. Must match consumers.py
+PLAYLIST_ID_LENGTH = 22
 
 EVENTFUL_KEY = os.getenv('EVENTFUL_KEY')
 if not EVENTFUL_KEY:
@@ -59,7 +60,6 @@ def parseDate(start, end):
     """
     return re.sub('-', '', start) + '00-' + re.sub('-','', end) + '00'
 
-
 class EventFinder(object):
     def __init__(self):
         self.artists = []
@@ -88,21 +88,22 @@ class EventFinder(object):
         return total_events // EVENTFUL_RESULTS_PER_PAGE + 1
 
     @staticmethod
-    def parse_events(responses, total_pages):
+    def parse_events(response):
         """ Returns a list of Events parsed from the eventful API """
+
+        if not request_was_successful(response):
+            print('WARNING: Unsuccessful HTTP response from eventful')
+            return []
+
+        json = response.json()
+        if json.get('events') is None:
+            print("ERROR: No eventful results on page")
+            return []
+
+        # parse the events into a list of Event objects
+        # print(json)
         events = []
-        for page, response in enumerate(responses, start=1):
-            if not request_was_successful(response):
-                print('WARNING: Skipping failed request to crawl page %d' % page)
-                continue
-            if page > total_pages:
-                break
-            json = response.json()
-            if json.get('events') is None:
-                print("ERROR: No eventful results for page %d" % page)
-            else:
-                # parse the events into a list of Event objects
-                events.extend(map(Event, json['events']['event']))
+        events.extend(map(Event, json['events']['event']))
         return events
 
     def searchForEvents(self, search_args, onProgress):
@@ -114,29 +115,26 @@ class EventFinder(object):
         :param search_args: Dict of eventful arguments. nResults is max number of events
         :return:
         """
-        print('Checking how many pages to crawl...')
+        print('Search For Events called. Checking how many pages to crawl...')
         pages = self.get_total_pages_to_search(search_args)
         urls = [self.assembleRequest(search_args, p) for p in range(1, pages + 1)]
 
         print('Crawling %d pages from the eventful api...' % pages)
         start_ms = time_ms()
-        # Fancy async lib has issues.
-        # responses = grequests.map(grequests.get(u) for u in urls)
-        # responses = [sendRequest(u) for u in urls]
-        responses = []
-        count = 0
+
         for u in urls:
-            onProgress(count/len(urls))
-            responses.append(requests.get(u))
-            count+=1
+            response = requests.get(u)
+            events = self.parse_events(response)
+            onProgress(events)
 
         print('Crawling took ' + str(time_ms() - start_ms) + ' ms')
 
-        events = self.parse_events(responses, pages)
-        self.upcomingEvents.extend(events)
-
-        print ("Done searching for events. Saved %i events matching the search query" % len(self.upcomingEvents) )
-        self.generateListOfArtists()
+        # Obsolete: Now messages are emitted when events are discovered and this object doesn't keep track of the whole list of events
+        # events = self.parse_events(responses, pages)
+        # self.upcomingEvents.extend(events)
+        #
+        # print ("Done searching for events. Saved %i events matching the search query" % len(self.upcomingEvents) )
+        # self.generateListOfArtists()
 
     @staticmethod
     def assembleRequest(searchArgs, pageNum, count_only=False):
@@ -160,10 +158,11 @@ class EventFinder(object):
         URL = baseURL + filterString
         return URL
 
-    def generateListOfArtists(self):
-        for event in self.upcomingEvents:
-            self.artists.append(event.title)
-            self.performers += event.performers
+    # Obsolete: Now messages are emitted when events are discovered and this object doesn't keep track of the whole list of events
+    # def generateListOfArtists(self):
+    #     for event in self.upcomingEvents:
+    #         self.artists.append(event.title)
+    #         self.performers += event.performers
 
 class Event(object):
 
@@ -199,3 +198,10 @@ class Event(object):
 
     def __repr__(self):
         return "Title: %r \nVenue: %r" % (self.title, self.venue_name)
+
+    def to_json(self):
+        return json.dumps({
+            "date": self.date.strftime('%m/%d/%Y'),
+            "venue": self.venue_name,
+            "artists": self.performers, # TODO sometimes this list is empty. Use title instead.
+        })

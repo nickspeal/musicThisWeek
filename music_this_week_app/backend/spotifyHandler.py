@@ -39,6 +39,15 @@ class SpotifySearcher(object):
         # This should be the only instance attribute, to maintain statelessness
         self.sp = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
 
+    def find_songs_for_artist(self, artist_name):
+        artistURI = self.filter_artist(artist_name)
+        if artistURI is None:
+            return None
+
+        # Find 2 tracks per artist for now
+        tracks = self.find_top_tracks(artistURI, 2)
+        return tracks
+
     def filter_list_of_artists(self, unfiltered_artists):
         """
         Turn a list of potential artist names into a list of Spotify artist URIs

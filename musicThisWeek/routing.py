@@ -15,9 +15,9 @@ application = ProtocolTypeRouter({
     #     ])
     # ),
     "channel": ChannelNameRouter({
-        "search": consumers.Search,
+        "search": consumers.SearchConsumer, # Handled by the worker
     }),
     "websocket": URLRouter([
-        url("^subscribe", consumers.Subscribe)
+        url("^subscribe", consumers.Subscribe) # Handled by the runserver
     ])
 })
