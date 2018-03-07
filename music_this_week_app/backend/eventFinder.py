@@ -105,7 +105,7 @@ class EventFinder(object):
                 events.extend(map(Event, json['events']['event']))
         return events
 
-    def searchForEvents(self, search_args):
+    def searchForEvents(self, search_args, onProgress):
         """
         Called by an external master, triggers a search
 
@@ -122,7 +122,14 @@ class EventFinder(object):
         start_ms = time_ms()
         # Fancy async lib has issues.
         # responses = grequests.map(grequests.get(u) for u in urls)
-        responses = [requests.get(u) for u in urls]
+        # responses = [sendRequest(u) for u in urls]
+        responses = []
+        count = 0
+        for u in urls:
+            onProgress(count/len(urls))
+            responses.append(requests.get(u))
+            count+=1
+
         print('Crawling took ' + str(time_ms() - start_ms) + ' ms')
 
         events = self.parse_events(responses, pages)

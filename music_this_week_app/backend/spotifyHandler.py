@@ -167,7 +167,7 @@ class SpotifySearcher(object):
 
         Artist.objects.get_or_create(spotify_uri=artist_uri, name=artist_name)
 
-    def get_song_list(self, artist_URIs, N=99, order="shuffled"):
+    def get_song_list(self, artist_URIs, N=99, order="shuffled", onProgress=None):
         """
         Come up with a list of songs by a given list of artists
 
@@ -176,6 +176,8 @@ class SpotifySearcher(object):
         :param order: Desired order of the list. Can be "shuffled". Other options may be added later
         :return tracklist: List of spotify track URIs, to create playlist later.
         """
+        if len(artist_URIs) == 0:
+            return []
 
         # Calculate number of tracks per artist. Round up to nearest int w/ int division then trim list later.
         number_of_tracks_per_artist = N // len(artist_URIs) + 1
@@ -186,6 +188,9 @@ class SpotifySearcher(object):
         tracks = []
         for a in artist_URIs:
             tracks = tracks + self.find_top_tracks(a, N=number_of_tracks_per_artist)
+            if onProgress:
+                completion_fraction = len(tracks) / (number_of_tracks_per_artist * len(artist_URIs))
+                onProgress(completion_fraction)
 
         if order == "shuffled":
             # Randomize playlist order

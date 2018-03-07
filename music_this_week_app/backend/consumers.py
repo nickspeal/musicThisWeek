@@ -3,7 +3,6 @@ from channels.consumer import SyncConsumer
 from channels.generic.websocket import JsonWebsocketConsumer
 from channels.layers import get_channel_layer
 from urllib.parse import parse_qs
-import time # TODO remove this once it's no longer needed
 
 from . import eventFinder
 from .spotifyHandler import SpotifySearcher, PlaylistCreator
@@ -31,13 +30,16 @@ class Search(SyncConsumer):
             "playlist": self.playlist,
         })
 
+    def _reprort_progress(self, start, end, status):
+        return lambda fraction: self._publish_update(fraction * (end - start) + start, status)
+
+
     def start_search(self, message):
         self.playlist = message["playlist"]
-        time.sleep(10) # Hack - Allow some time for the client to subscribe before publishing the first update.
+
         # Search for list of upcoming artists
-        self._publish_update(5, "Searching for events")
         ef = eventFinder.EventFinder()
-        ef.searchForEvents(message["search_args"])
+        ef.searchForEvents(message["search_args"], onProgress=self._reprort_progress(0,40, "Searching for events"))
         artists = ef.performers
 
         # Validate and filter artists
@@ -45,8 +47,9 @@ class Search(SyncConsumer):
         artist_URIs = searcher.filter_list_of_artists(artists)
 
         # Create List of Songs (track URIs)
-        self._publish_update(75, "{} artists are on spotify. Searching for the most popular songs from each.".format(len(artist_URIs)))
-        song_list = searcher.get_song_list(artist_URIs, N=99, order='shuffled')
+        status = "{} artists are on spotify. Searching for the most popular songs from each.".format(len(artist_URIs))
+        self._publish_update(75, status)
+        song_list = searcher.get_song_list(artist_URIs, N=99, order='shuffled', onProgress = self._reprort_progress(75, 95, status))
 
         self._publish_update(95, "{} songs are lined up. Now we're just combining them into a Spotify playlist.".format(len(song_list)))
 
