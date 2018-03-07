@@ -36,7 +36,7 @@ class Create(View):
             return None
         return token
 
-    def _valid_search_args(search_args):
+    def _valid_search_args(self, search_args):
         if "location" not in search_args.keys():
             print("Error: Location missing from search arguments", search_args)
             return False
