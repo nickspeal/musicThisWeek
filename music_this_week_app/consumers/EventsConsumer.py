@@ -1,6 +1,6 @@
 from .PlaylistGroupConsumer import PlaylistGroupConsumer
 from asgiref.sync import async_to_sync
-from ..backend.spotifyHandler import SpotifySearcher
+from ..SpotifyHandler.SpotifySearcher import SpotifySearcher
 import json
 
 # Instantiate object used for handling anonymous Spotify requests, i.e. searching

@@ -17,7 +17,7 @@ import json
 
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
-from .backend.spotifyHandler import PlaylistCreator, is_token_valid
+from .SpotifyHandler.SpotifyUser import SpotifyUser
 
 class Create(View):
     allowed_methods = ['post', 'options']
@@ -63,8 +63,9 @@ class Create(View):
 
         # VALIDATE TOKEN
         token = self._get_token(request)
-        if not is_token_valid(token):
-            return HttpResponseForbidden('spotify token is not valid')
+        spotify_user = SpotifyUser(token)
+        if not spotify_user.is_token_valid():
+            return HttpResponseForbidden('Spotify token is not valid')
 
         # VALIDATE SEARCH ARGS
         # Parse request for search arguments
@@ -72,15 +73,8 @@ class Create(View):
         if not self._valid_search_args(search_args):
             return HttpResponseBadRequest("Bad Search Arguments")
 
-        # Load PlaylistCreator
-        playlist_creator = PlaylistCreator()
-        playlist_creator.complete_login(token)
-
         # Get Playlist ID
-        playlistURL = playlist_creator.get_spotify_playlist("Music This Week")
-
-        # Erase Playlist
-        playlist_creator.erase(playlistURL)
+        playlistURL = spotify_user.get_spotify_playlist(erase=True)
 
         # Asynchronously populate playlist
         async_to_sync(get_channel_layer().send)(

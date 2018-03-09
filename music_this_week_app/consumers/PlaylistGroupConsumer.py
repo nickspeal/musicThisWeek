@@ -1,7 +1,15 @@
 from channels.consumer import SyncConsumer
-from ..backend.spotifyHandler import get_playlist_id_from_url
 from asgiref.sync import async_to_sync
 
+def get_playlist_id_from_url(url):
+    """
+        Utility function used in multiple places to read the last N digits off a Spotify playlist URL,
+        obtaining a single playlist ID string that can be used to uniquely refer to it throughout this app.
+    """
+
+    # Number of characters to strip off the playlist URL and call it a unique ID
+    PLAYLIST_ID_LENGTH = 22
+    return url[-PLAYLIST_ID_LENGTH:]
 
 class PlaylistGroupConsumer(SyncConsumer):
     """

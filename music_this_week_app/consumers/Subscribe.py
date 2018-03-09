@@ -1,7 +1,7 @@
 from channels.generic.websocket import JsonWebsocketConsumer
 from asgiref.sync import async_to_sync
 from urllib.parse import parse_qs
-from ..backend.spotifyHandler import get_playlist_id_from_url
+from .PlaylistGroupConsumer import get_playlist_id_from_url
 
 class Subscribe(JsonWebsocketConsumer):
     """

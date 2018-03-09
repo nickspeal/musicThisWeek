@@ -1,5 +1,5 @@
 from .PlaylistGroupConsumer import PlaylistGroupConsumer
-from ..backend.spotifyHandler import PlaylistCreator, get_playlist_id_from_url
+from ..SpotifyHandler.SpotifyPlaylist import SpotifyPlaylist
 
 class SongAddConsumer(PlaylistGroupConsumer):
     """
@@ -8,16 +8,12 @@ class SongAddConsumer(PlaylistGroupConsumer):
     """
     def init(self, message):
         # Log in to Spotify
-        self.playlist = message.get('playlist')
-        self.playlist_creator = PlaylistCreator()
-        self.playlist_creator.complete_login(message.get('token'))
-
-        self.subscribe_to_group(self.playlist)
+        self.playlist = SpotifyPlaylist(message.get('token'), message.get('playlist'))
+        self.subscribe_to_group(message.get('playlist'))
 
     def song_found(self, message):
         """Add songs to spotify playlist."""
-        # TODO modify PlaylistCreator to save self.playlit itself on construction?
-        self.playlist_creator.add(self.playlist, message.get('songs'))
+        self.playlist.add(message.get('songs'))
 
     def song_not_found(self, message):
         print("No songs found for artist: ", message.get('artist'))
