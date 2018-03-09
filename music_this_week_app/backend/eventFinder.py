@@ -15,8 +15,6 @@ import json
 
 
 EVENTFUL_RESULTS_PER_PAGE = 50  # (I think it is max 100, default 20)
-# Number of characters to strip off the playlist URL and call it a unique ID. Must match consumers.py
-PLAYLIST_ID_LENGTH = 22
 
 EVENTFUL_KEY = os.getenv('EVENTFUL_KEY')
 if not EVENTFUL_KEY:

@@ -3,22 +3,16 @@ from django.conf.urls import url
 from channels.routing import ProtocolTypeRouter, URLRouter, ChannelNameRouter
 # from channels.auth import AuthMiddlewareStack
 
-from music_this_week_app.backend import consumers
+from music_this_week_app.consumers import SearchConsumer, SongAddConsumer, Subscribe
 
 application = ProtocolTypeRouter({
-
-    # WebSocket chat handler
-    # "websocket": AuthMiddlewareStack(
-    #     URLRouter([
-    #         url("^chat/admin/$", AdminChatConsumer),
-    #         url("^chat/$", PublicChatConsumer),
-    #     ])
-    # ),
+     # Handled by the worker - Make sure to start the worker as a separate process with these channels as arguments!
     "channel": ChannelNameRouter({
-        "search": consumers.SearchConsumer, # Handled by the worker
-        "song": consumers.SongAddConsumer,
+        "search": SearchConsumer.SearchConsumer,
+        "song": SongAddConsumer.SongAddConsumer,
     }),
+    # Handled by runserver automatically
     "websocket": URLRouter([
-        url("^subscribe", consumers.Subscribe) # Handled by the runserver
-    ])
+        url("^subscribe", Subscribe.Subscribe)
+    ]),
 })
