@@ -71,9 +71,8 @@ class EventFinder(object):
         url = EventFinder.assembleRequest(search_args, pageNum=1, count_only=True)
 
         start_ms = time_ms()
-        print('Request to %s' % url)
         response = requests.get(url)
-        print('Request to ' + url + ' took ' + str(time_ms() - start_ms) + ' ms')
+        print("[EventFinder]: Total page count request took {} ms".format(time_ms() - start_ms))
 
         if not request_was_successful(response):
             print("ERROR: No response from eventful.")
@@ -113,11 +112,11 @@ class EventFinder(object):
         :param search_args: Dict of eventful arguments. nResults is max number of events
         :return:
         """
-        print('Search For Events called. Checking how many pages to crawl...')
+        print('[EventFinder]: Search For Events called. Checking how many pages to crawl...')
         pages = self.get_total_pages_to_search(search_args)
         urls = [self.assembleRequest(search_args, p) for p in range(1, pages + 1)]
 
-        print('Crawling %d pages from the eventful api...' % pages)
+        print('[EventFinder]: Crawling %d pages from the eventful api...' % pages)
         start_ms = time_ms()
 
         for u in urls:
@@ -125,14 +124,8 @@ class EventFinder(object):
             events = self.parse_events(response)
             onProgress(events)
 
-        print('Crawling took ' + str(time_ms() - start_ms) + ' ms')
+        print('[EventFinder]: Crawling took ' + str(time_ms() - start_ms) + ' ms')
 
-        # Obsolete: Now messages are emitted when events are discovered and this object doesn't keep track of the whole list of events
-        # events = self.parse_events(responses, pages)
-        # self.upcomingEvents.extend(events)
-        #
-        # print ("Done searching for events. Saved %i events matching the search query" % len(self.upcomingEvents) )
-        # self.generateListOfArtists()
 
     @staticmethod
     def assembleRequest(searchArgs, pageNum, count_only=False):
@@ -156,14 +149,8 @@ class EventFinder(object):
         URL = baseURL + filterString
         return URL
 
-    # Obsolete: Now messages are emitted when events are discovered and this object doesn't keep track of the whole list of events
-    # def generateListOfArtists(self):
-    #     for event in self.upcomingEvents:
-    #         self.artists.append(event.title)
-    #         self.performers += event.performers
 
 class Event(object):
-
     def __init__(self, event_dict):
         self.url = event_dict['url']
         self.description = event_dict['description']
@@ -198,8 +185,12 @@ class Event(object):
         return "Title: %r \nVenue: %r" % (self.title, self.venue_name)
 
     def to_json(self):
-        return json.dumps({
+        return json.dumps(self.to_dict())
+
+    def to_dict(self):
+        return {
             "date": self.date.strftime('%m/%d/%Y'),
             "venue": self.venue_name,
             "artists": self.performers, # TODO sometimes this list is empty. Use title instead.
-        })
+            "url": self.url,
+        }

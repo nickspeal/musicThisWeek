@@ -46,5 +46,5 @@ class SearchConsumer(PlaylistGroupConsumer):
     def _broadcast_events_found(self, event_list):
         self.broadcast_to_group({
             "type": "events_found",
-            "events": [e.to_json() for e in event_list],
+            "events": [e.to_dict() for e in event_list],
         })

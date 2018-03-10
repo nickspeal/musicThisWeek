@@ -32,11 +32,11 @@ class SpotifyPlaylist():
         Adds a list of track IDs to a specified playlist ID
 
         :param playlist: Playlist URL (or URI, whatever)
-        :param song_list: list of song URIs
+        :param song_list: list of song URIs. MUST BE A LIST!
         :return:
         """
         # Add songs to playlist 99 tracks at a time (Spotify limit)
         i=0
         while(i<len(song_list)):
-            self.sp.user_playlist_add_tracks(self.username, playlist, song_list[i:i+99])
+            self.sp.user_playlist_add_tracks(self.user_id, self.playlist_url, song_list[i:i+99])
             i += 99

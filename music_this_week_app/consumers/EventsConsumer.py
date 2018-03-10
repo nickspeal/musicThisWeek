@@ -6,6 +6,12 @@ import json
 # Instantiate object used for handling anonymous Spotify requests, i.e. searching
 searcher = SpotifySearcher()
 
+def construct_playlist_items(artist, event_dict):
+    songs = []
+    for song in artist.get_songs():
+        item = {"song": song.to_dict(), "artist": artist.to_dict(), "event": event_dict}
+        songs.append(item)
+    return songs
 
 class EventsConsumer(PlaylistGroupConsumer):
     """
@@ -20,18 +26,19 @@ class EventsConsumer(PlaylistGroupConsumer):
             When a list of events are found, check Spotify for each artist
             Checks for songs for each event and emits messages on the same group with type "song_found" or "song_not_found"
         """
-        for event in message.get('events', []):
-            artists = json.loads(event).get('artists', [])
-            for artist in artists:
-                songs = searcher.find_songs_for_artist(artist)
-                if songs:
+        for event_dict in message.get('events', []):
+            artists = event_dict.get('artists', [])
+            for artist_name in artists:
+                artist = searcher.query_artist(artist_name)
+                if artist:
+
+                    playlist_items = construct_playlist_items(artist, event_dict)
                     self.broadcast_to_group({
-                        "type": "song_found",
-                        "artist": artist,
-                        "songs": songs,
+                        "type": "songs_found",
+                        "songs": playlist_items,
                     })
                 else:
                     self.broadcast_to_group({
-                        "type": "song_not_found",
-                        "artist": artist,
+                        "type": "artist_not_found",
+                        "artist": artist_name,
                     })

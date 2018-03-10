@@ -28,8 +28,8 @@ class PlaylistGroupConsumer(SyncConsumer):
     def events_found(self, message):
         pass
 
-    def song_found(self, message):
+    def songs_found(self, message):
         pass
 
-    def song_not_found(self, message):
+    def artist_not_found(self, message):
         pass

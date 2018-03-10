@@ -11,9 +11,10 @@ class SongAddConsumer(PlaylistGroupConsumer):
         self.playlist = SpotifyPlaylist(message.get('token'), message.get('playlist'))
         self.subscribe_to_group(message.get('playlist'))
 
-    def song_found(self, message):
+    def songs_found(self, message):
         """Add songs to spotify playlist."""
-        self.playlist.add(message.get('songs'))
+        songs = message.get('songs')
+        self.playlist.add([s.get('song', {}).get('uri') for s in songs])
 
-    def song_not_found(self, message):
+    def artist_not_found(self, message):
         print("No songs found for artist: ", message.get('artist'))

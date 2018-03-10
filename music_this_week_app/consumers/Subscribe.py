@@ -33,10 +33,10 @@ class Subscribe(JsonWebsocketConsumer):
     def events_found(self, content):
         self.send_json(content)
 
-    def song_found(self, content):
+    def songs_found(self, content):
         self.send_json(content)
 
-    def song_not_found(self, content):
+    def artist_not_found(self, content):
         self.send_json(content)
 
     def disconnect(self, close_code):
