@@ -64,19 +64,23 @@ Nick Speal 2016. All rights reserved.
 
 ## Running Instructions
 
-1. Run `sh run.sh` from the root of the repo in your project's virtualenv.
+1. cd into the root of the repo
 
-    (Prereq: Make sure you already ran the setup instructions at some previous point.)
+1. Start the redis server: `redis-server`
 
-    ~~~~
-    $ sh run.sh
-    ~~~~
+1. In a new terminal window, open the project's virtualenv: `workon mtw`
 
-    This will source the credentials file, start the server, and open a browser for you!
+1. Load the private environment variables: `source _private/spotipyCreds.sh`
 
-1. Follow instructions in the browser
+1. Run the appropriate workers: `python manage.py runworker search song events`
 
-1. Play the playlist in the browser or find it automatically ready in the Spotify app.
+1. In a new terminal window, open the project's virtualenv: `workon mtw`
+
+1. Run the backend: `sh run.sh` (Prereq: Make sure you already ran the setup instructions at some previous point.)
+
+1. In a new terminal window, cd into the musicthisweek-client directory with the frontend application and then run it, (probably `npm start`);
+
+1. Open the frontend application in the browser and follow the instructions
 
 
 # Documentation
