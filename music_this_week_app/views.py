@@ -19,6 +19,17 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from .SpotifyHandler.SpotifyUser import SpotifyUser
 
+class Test(View):
+    allowed_methods = ['get']
+
+    def options(self, request):
+        response = HttpResponse()
+        response['allow'] = ','.join(self.allowed_methods)
+        return response
+
+    def get(self, request):
+        return HttpResponse('Hello World', status=200)
+
 class Create(View):
     allowed_methods = ['post', 'options']
 
