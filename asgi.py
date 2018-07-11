@@ -8,6 +8,6 @@ import django
 from channels.routing import get_default_application
 
 # Done within AWS console
-# os.environ.setdefault("DJANGO_SETTINGS_MODULE", "musicThisWeek.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "musicThisWeek.settings")
 django.setup()
 application = get_default_application()

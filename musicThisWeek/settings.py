@@ -25,12 +25,11 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['musicthisweek.speal.ca', 'localhost']
+ALLOWED_HOSTS = ['discoverlive.speal.ca', 'localhost', 'ec2-54-183-72-229.us-west-1.compute.amazonaws.com']
 
 CORS_ORIGIN_WHITELIST = (
     'localhost:3000',
-    'musicthisweek.speal.ca',
-    'musicthisweek.us-west-1.elasticbeanstalk.com/',
+    'discoverlive.speal.ca',
 )
 
 # Application definition
