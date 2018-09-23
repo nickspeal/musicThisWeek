@@ -13,9 +13,13 @@ virtualenv -p `which python36` env
 
 # App setup
 cd musicThisWeek
-mkdir _private
-mv ../spotipyCreds _private
+mv ../spotipyCreds.sh _private
+source /home/ec2-user/musicThisWeek/_private/spotipyCreds.sh
+source /home/ec2-user/env/bin/activate
+python manage.py migrate
 
 # Go!
-tmux
-teamocil --layout deploy/tmuxLayout.yml
+tmux new-session -d -s discover_live 'teamocil --layout /home/ec2-user/musicThisWeek/deploy/tmuxLayout.yml'
+
+echo 'Deployment complete. SSH in and then run `tmux attach`'
+echo 'ssh -i ~/.ssh/discover_live_lightsail.pem ec2-user@api.discoverlive.speal.ca'
