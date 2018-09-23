@@ -1,0 +1,8 @@
+windows:
+  - name: discover-live
+    root: ~/musicThisWeek
+    layout: tiled
+    panes:
+      - source /home/ec2-user/musicThisWeek/_private/spotipyCreds.sh && source /home/ec2-user/env/bin/activate && daphne -b 0.0.0.0 -p 8080 asgi:application
+      - redis-server
+      - source /home/ec2-user/musicThisWeek/_private/spotipyCreds.sh && source /home/ec2-user/env/bin/activate && python manage.py runworker search song events
